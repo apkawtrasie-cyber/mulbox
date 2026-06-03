@@ -1,0 +1,61 @@
+import { Resend } from "resend";
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "powiadomienia@mulbox.ch";
+
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
+interface SendArgs {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+}
+
+/** Cienka warstwa nad Resend – jeśli brak klucza, loguje (dev). */
+export async function sendEmail({ to, subject, html, replyTo }: SendArgs): Promise<void> {
+  if (!resend) {
+    // eslint-disable-next-line no-console
+    console.warn("[email] RESEND_API_KEY brak – pomijam wysyłkę:", { to, subject });
+    return;
+  }
+  const { data, error } = await resend.emails.send({
+    from: `Mulbox <${FROM_EMAIL}>`,
+    to,
+    subject,
+    html,
+    replyTo: replyTo,
+  });
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error("[email] Resend error:", JSON.stringify(error), { to, subject, from: FROM_EMAIL });
+    throw new Error(`Resend: ${error.message ?? JSON.stringify(error)}`);
+  }
+  // eslint-disable-next-line no-console
+  console.log("[email] Wysłano OK:", data?.id, "→", to);
+}
+
+/** Podstawia tagi {key} na realne wartości z pakietu danych. */
+export function applyTemplate(template: string, data: Record<string, unknown>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key) => {
+    const v = data[key];
+    if (v === undefined || v === null) return "";
+    return String(v);
+  });
+}
+
+/** Domyślne renderowanie maila powiadomienia, gdy nie ustawiono custom_email_template. */
+export function renderDefaultNotification(formName: string, data: Record<string, unknown>): string {
+  const rows = Object.entries(data)
+    .map(([k, v]) => `<tr><td style="padding:8px;border-bottom:1px solid #eee;color:#64748b">${escapeHtml(k)}</td><td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(String(v ?? ""))}</td></tr>`)
+    .join("");
+  return `<div style="font-family:Inter,Arial,sans-serif;color:#0f172a;max-width:560px;margin:0 auto">
+    <h2 style="margin:0 0 4px">Nowa wiadomość z formularza</h2>
+    <p style="margin:0;color:#64748b">${escapeHtml(formName)}</p>
+    <table style="width:100%;margin-top:16px;border-collapse:collapse;font-size:14px">${rows}</table>
+  </div>`;
+}
+
+export function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
