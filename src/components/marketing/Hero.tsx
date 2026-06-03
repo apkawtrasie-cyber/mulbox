@@ -4,13 +4,13 @@ import { ArrowRight, PlayCircle, Check, Palette, Mail, Link2, BarChart3 } from "
 
 function HeroCard({ className, icon, title, subtitle }: { className: string; icon: React.ReactNode; title: string; subtitle: string }) {
   return (
-    <div className={`absolute z-20 hidden sm:flex items-center gap-3 rounded-2xl backdrop-blur-md border border-white/70 dark:border-white/[0.12] bg-white/80 dark:bg-[#2a1f5e]/70 px-4 py-3 shadow-[0_8px_32px_rgba(139,92,246,0.18),0_2px_8px_rgba(139,92,246,0.08)] dark:shadow-[0_8px_40px_rgba(139,92,246,0.7),0_0_24px_rgba(109,40,217,0.4)] ${className}`}>
-      <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-brand-50 dark:bg-[#3d2080] text-brand-600 dark:text-brand-200">
+    <div className={`absolute z-20 flex items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl backdrop-blur-md border border-white/70 dark:border-white/[0.12] bg-white/80 dark:bg-[#2a1f5e]/70 px-2.5 py-2 sm:px-4 sm:py-3 shadow-[0_8px_32px_rgba(139,92,246,0.18),0_2px_8px_rgba(139,92,246,0.08)] dark:shadow-[0_8px_40px_rgba(139,92,246,0.7),0_0_24px_rgba(109,40,217,0.4)] ${className}`}>
+      <span className="grid h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 place-items-center rounded-full bg-brand-50 dark:bg-[#3d2080] text-brand-600 dark:text-brand-200">
         {icon}
       </span>
       <div>
-        <p className="text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">{title}</p>
-        <p className="text-[11px] text-slate-500 dark:text-purple-200/70 max-w-[130px] leading-relaxed">{subtitle}</p>
+        <p className="text-[11px] sm:text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">{title}</p>
+        <p className="text-[9px] sm:text-[11px] text-slate-500 dark:text-purple-200/70 max-w-[90px] sm:max-w-[130px] leading-relaxed">{subtitle}</p>
       </div>
     </div>
   );
@@ -58,7 +58,7 @@ export function Hero() {
         </div>
 
         {/* Hero image + float cards */}
-        <div className="relative w-full aspect-[5/6]">
+        <div className="relative w-[120%] -ml-[10%] sm:w-full sm:ml-0 aspect-[5/6]">
           {/* Glow BEHIND phone – light mode: soft lavender halo */}
           <div aria-hidden className="absolute inset-0 pointer-events-none dark:hidden"
             style={{ background: "radial-gradient(ellipse 65% 70% at 52% 44%, rgba(255,255,255,0.95) 0%, rgba(220,180,255,0.55) 22%, rgba(180,130,255,0.2) 50%, transparent 72%)" }} />
