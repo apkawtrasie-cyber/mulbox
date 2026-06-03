@@ -27,9 +27,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="container-fluid flex h-16 items-center justify-between gap-4">
           <Logo />
           <div className="flex items-center gap-3 text-sm">
-            <span className="hidden sm:inline-block rounded-full bg-brand-50 text-brand-700 px-3 py-1 text-xs font-semibold uppercase">
+            <Link href="/pricing" className="hidden sm:inline-flex items-center rounded-full bg-brand-50 text-brand-700 px-3 py-1 text-xs font-semibold uppercase hover:bg-brand-100 transition">
               Plan: {profile.plan_type}
-            </span>
+            </Link>
             {profile.role === "admin" && (
               <Link href="/admin" className="hidden sm:inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-3 py-1 text-xs font-semibold uppercase">
                 <Shield size={14} /> Admin

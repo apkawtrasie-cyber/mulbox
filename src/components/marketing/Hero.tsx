@@ -1,15 +1,19 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, PlayCircle, Check } from "lucide-react";
-import { HeroPhoneMock } from "./HeroPhoneMock";
 
 /** Sekcja Hero – priorytet renderowania (above the fold). */
 export function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-50/60 via-white to-white" />
+      {/* Light gradient */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-50/60 via-white to-white dark:hidden" />
+      {/* Dark gradient */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden dark:block" style={{ background: "linear-gradient(135deg,#0d0d1a 0%,#12102a 40%,#1a103a 100%)" }} />
+
       <div className="container-fluid grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center pt-12 sm:pt-16 lg:pt-24 pb-12 sm:pb-20">
         <div className="max-w-xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-sm font-medium text-brand-700">
+          <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 dark:border-brand-700/60 bg-brand-50 dark:bg-brand-900/30 px-3 py-1 text-sm font-medium text-brand-700 dark:text-brand-300">
             ✨ Nowoczesne formularze dla Twojej strony
           </span>
           <h1 className="h1 mt-5 text-slate-900">
@@ -36,8 +40,25 @@ export function Hero() {
             ))}
           </ul>
         </div>
-        <div className="relative">
-          <HeroPhoneMock />
+
+        {/* Hero image – light / dark */}
+        <div className="relative w-full aspect-[5/6]">
+          <Image
+            src="/tlo.handy.mulbox.png"
+            alt="Mulbox – formularz na telefonie"
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-contain dark:hidden"
+            priority
+          />
+          <Image
+            src="/tlo.handy.dark.mulbox.png"
+            alt="Mulbox – formularz na telefonie (dark)"
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-contain hidden dark:block"
+            priority
+          />
         </div>
       </div>
     </section>
