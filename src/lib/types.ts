@@ -19,11 +19,13 @@ export interface Profile {
 /** Pojedynczy "klocek" w wizualnym kreatorze. */
 export interface FormField {
   id: string;
-  type: "text" | "email" | "tel" | "textarea" | "number" | "date" | "file";
+  type: "text" | "email" | "tel" | "textarea" | "number" | "date" | "file" | "select" | "checkbox";
   label: string;
   name: string;
   placeholder?: string;
   required?: boolean;
+  /** Opcje listy wyboru (tylko dla type="select"). */
+  options?: string[];
 }
 
 /** Konfiguracja formularza (JSONB w tabeli forms.config). */

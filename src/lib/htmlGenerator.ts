@@ -16,18 +16,27 @@ export function generateFormHTML(formId: string, config: FormConfig, plan: PlanT
 
   const fieldsHTML = (config.fields ?? [])
     .map((f) => {
-      const required = f.required ? "required" : "";
+      const req = f.required ? " required" : "";
       const placeholder = f.placeholder ?? "";
+      const cls = inputForType(f.type);
+
       if (f.type === "textarea") {
-        return `  <div>
-    <label class="block text-sm font-medium text-slate-700 mb-1.5">${escapeHtml(f.label)}</label>
-    <textarea name="${escapeHtml(f.name)}" placeholder="${escapeHtml(placeholder)}" ${required} ${inputForType(f.type)}></textarea>
-  </div>`;
+        return `  <div>\n    <label class="block text-sm font-medium text-slate-700 mb-1.5">${escapeHtml(f.label)}</label>\n    <textarea name="${escapeHtml(f.name)}" placeholder="${escapeHtml(placeholder)}"${req} ${cls}></textarea>\n  </div>`;
       }
-      return `  <div>
-    <label class="block text-sm font-medium text-slate-700 mb-1.5">${escapeHtml(f.label)}</label>
-    <input type="${f.type}" name="${escapeHtml(f.name)}" placeholder="${escapeHtml(placeholder)}" ${required} ${inputForType(f.type)} />
-  </div>`;
+
+      if (f.type === "select") {
+        const opts = (f.options ?? []).filter(Boolean)
+          .map((o) => `      <option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`)
+          .join("\n");
+        return `  <div>\n    <label class="block text-sm font-medium text-slate-700 mb-1.5">${escapeHtml(f.label)}</label>\n    <select name="${escapeHtml(f.name)}"${req} ${cls}>\n      <option value="">${escapeHtml(placeholder || "— Wybierz —")}</option>\n${opts}\n    </select>\n  </div>`;
+      }
+
+      if (f.type === "checkbox") {
+        const text = escapeHtml(placeholder || f.label);
+        return `  <div class="flex items-start gap-3">\n    <input type="checkbox" id="${escapeHtml(f.name)}" name="${escapeHtml(f.name)}"${req} class="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600" />\n    <label for="${escapeHtml(f.name)}" class="text-sm text-slate-700 cursor-pointer">${text}</label>\n  </div>`;
+      }
+
+      return `  <div>\n    <label class="block text-sm font-medium text-slate-700 mb-1.5">${escapeHtml(f.label)}</label>\n    <input type="${f.type}" name="${escapeHtml(f.name)}" placeholder="${escapeHtml(placeholder)}"${req} ${cls} />\n  </div>`;
     })
     .join("\n");
 

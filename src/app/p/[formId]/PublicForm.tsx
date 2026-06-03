@@ -80,7 +80,27 @@ export default function PublicForm({ formId, fields, submitLabel, siteKey, accen
     >
       <div className={wide ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "space-y-4"}>
         {fields.map((f) => {
-          const fullWidth = wide && (f.type === "textarea" || f.type === "file");
+          const fullWidth = wide && (f.type === "textarea" || f.type === "file" || f.type === "checkbox");
+
+          if (f.type === "checkbox") {
+            return (
+              <div key={f.id} className={fullWidth ? "md:col-span-2" : undefined}>
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    id={f.id}
+                    name={f.name}
+                    required={f.required}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <span className="text-sm text-slate-700 group-hover:text-slate-900 leading-snug">
+                    {f.placeholder || f.label}
+                  </span>
+                </label>
+              </div>
+            );
+          }
+
           return (
             <div key={f.id} className={fullWidth ? "md:col-span-2" : undefined}>
               <label htmlFor={f.id} className="label">
@@ -97,6 +117,19 @@ export default function PublicForm({ formId, fields, submitLabel, siteKey, accen
                 />
               ) : f.type === "file" ? (
                 <FileDropzone field={f} />
+              ) : f.type === "select" ? (
+                <select
+                  id={f.id}
+                  name={f.name}
+                  required={f.required}
+                  defaultValue=""
+                  className="input"
+                >
+                  <option value="" disabled>{f.placeholder || "— Wybierz opcję —"}</option>
+                  {(f.options ?? []).filter(Boolean).map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
               ) : (
                 <input
                   id={f.id}
