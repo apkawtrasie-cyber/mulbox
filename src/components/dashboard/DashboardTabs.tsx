@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LayoutGrid, Wand2, Inbox as InboxIcon, Settings as SettingsIcon } from "lucide-react";
+import { LayoutGrid, Wand2, Inbox as InboxIcon, Settings as SettingsIcon, FileText } from "lucide-react";
 import type { FormRecord, Profile, SubmissionRecord } from "@/lib/types";
 import { FormsList } from "./modules/FormsList";
 import { FormBuilder } from "./modules/FormBuilder";
 import { Inbox } from "./modules/Inbox";
 import { Settings } from "./modules/Settings";
+import { BriefBuilder } from "./modules/BriefBuilder";
 import { RedeemCode } from "./RedeemCode";
 
-type TabId = "forms" | "builder" | "inbox" | "settings";
+type TabId = "forms" | "builder" | "brief" | "inbox" | "settings";
 
 const TABS: { id: TabId; label: string; icon: typeof LayoutGrid }[] = [
   { id: "forms", label: "Formularze", icon: LayoutGrid },
   { id: "builder", label: "Kreator", icon: Wand2 },
+  { id: "brief", label: "Brief", icon: FileText },
   { id: "inbox", label: "Skrzynka", icon: InboxIcon },
   { id: "settings", label: "Ustawienia", icon: SettingsIcon },
 ];
@@ -79,6 +81,13 @@ export function DashboardTabs({ profile, forms, submissions }: Props) {
             selectedForm={selectedForm}
             onSelectForm={setSelectedFormId}
             plan={profile.plan_type}
+          />
+        )}
+        {active === "brief" && (
+          <BriefBuilder
+            briefForms={forms.filter((f) => f.config?.form_type === "brief")}
+            plan={profile.plan_type}
+            onEditForm={(id) => { setSelectedFormId(id); setActive("builder"); }}
           />
         )}
         {active === "inbox" && (

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, FileText, ToggleRight, ToggleLeft, Trash2, ExternalLink } from "lucide-react";
+import { Plus, FileText, ToggleRight, ToggleLeft, Trash2, ExternalLink, AlignLeft, LayoutTemplate, X } from "lucide-react";
 import type { FormRecord } from "@/lib/types";
 
 interface Props {
@@ -15,16 +15,25 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 /** Moduł 1: Lista formularzy – widok kafelkowy. */
 export function FormsList({ forms, onSelect }: Props) {
   const router = useRouter();
-  const [creating, setCreating] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [creating, setCreating] = useState<string | null>(null);
 
-  async function createForm() {
-    setCreating(true);
+  async function createForm(category: "standard" | "wide") {
+    setCreating(category);
+    setShowPicker(false);
     try {
-      const res = await fetch("/api/forms", { method: "POST" });
-      if (!res.ok) throw new Error("Nie udało się utworzyć formularza.");
+      if (category === "wide") {
+        await fetch("/api/forms/brief", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ template: "wycena" }),
+        });
+      } else {
+        await fetch("/api/forms", { method: "POST" });
+      }
       router.refresh();
     } finally {
-      setCreating(false);
+      setCreating(null);
     }
   }
 
@@ -50,9 +59,43 @@ export function FormsList({ forms, onSelect }: Props) {
           <h1 className="text-2xl font-bold text-slate-900">Twoje formularze</h1>
           <p className="text-sm text-slate-500">Zarządzaj wszystkimi swoimi formularzami w jednym miejscu.</p>
         </div>
-        <button onClick={createForm} disabled={creating} className="btn-primary disabled:opacity-60">
-          <Plus size={16} /> Nowy formularz
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowPicker((v) => !v)}
+            disabled={!!creating}
+            className="btn-primary disabled:opacity-60"
+          >
+            <Plus size={16} /> {creating ? "Tworzę…" : "Nowy formularz"}
+          </button>
+          {showPicker && (
+            <div className="absolute right-0 top-full mt-2 z-20 w-72 rounded-2xl border border-slate-200 bg-white shadow-xl p-3 space-y-2">
+              <div className="flex items-center justify-between pb-1">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Wybierz typ formularza</p>
+                <button onClick={() => setShowPicker(false)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
+              </div>
+              <button
+                onClick={() => createForm("standard")}
+                className="w-full flex items-start gap-3 rounded-xl border border-slate-200 p-3 hover:border-violet-400 hover:bg-violet-50/40 transition-colors text-left"
+              >
+                <AlignLeft size={18} className="mt-0.5 shrink-0 text-violet-600" />
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Formularz kontaktowy</p>
+                  <p className="text-xs text-slate-500">Wąski układ, osadzany na stronie przez HTML</p>
+                </div>
+              </button>
+              <button
+                onClick={() => createForm("wide")}
+                className="w-full flex items-start gap-3 rounded-xl border border-slate-200 p-3 hover:border-violet-400 hover:bg-violet-50/40 transition-colors text-left"
+              >
+                <LayoutTemplate size={18} className="mt-0.5 shrink-0 text-violet-600" />
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Brief / Zapytanie</p>
+                  <p className="text-xs text-slate-500">Szeroki układ, pełnoekranowa strona /p/[id]</p>
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {forms.length === 0 ? (

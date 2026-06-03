@@ -2,9 +2,10 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Copy, Save, Plus, Trash2, Check, ExternalLink } from "lucide-react";
+import { Copy, Save, Plus, Trash2, Check, ExternalLink, QrCode, Sparkles, X, Download } from "lucide-react";
 import type { FormField, FormRecord, PlanType } from "@/lib/types";
 import { generateFormHTML } from "@/lib/htmlGenerator";
+import { AIPanel } from "./AIPanel";
 
 interface Props {
   forms: FormRecord[];
@@ -27,6 +28,8 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
   const [name, setName] = useState(selectedForm?.name ?? "Nowy formularz");
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+  const [rightPanel, setRightPanel] = useState<"html" | "ai">("html");
 
   useEffect(() => {
     setFields(selectedForm?.config?.fields ?? []);
@@ -43,6 +46,9 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
   }
   function removeField(id: string) {
     setFields((prev) => prev.filter((f) => f.id !== id));
+  }
+  function addAiField(preset: Omit<FormField, "id">) {
+    setFields((prev) => [...prev, { ...preset, id: crypto.randomUUID() }]);
   }
   function updateField(id: string, patch: Partial<FormField>) {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
@@ -134,7 +140,43 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
         >
           <ExternalLink size={13} /> Otwórz
         </a>
+        <button
+          onClick={() => setShowQR((v) => !v)}
+          className={`btn-secondary py-1.5 px-2.5 text-xs shrink-0 ${showQR ? "bg-violet-50 border-violet-300 text-violet-700" : ""}`}
+        >
+          <QrCode size={13} /> QR
+        </button>
       </div>
+
+      {/* QR Code panel */}
+      {showQR && (() => {
+        const formUrl = typeof window !== "undefined"
+          ? `${window.location.origin}/p/${selectedForm.id}`
+          : `https://mulbox.vercel.app/p/${selectedForm.id}`;
+        const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(formUrl)}`;
+        return (
+          <div className="mt-3 flex items-center gap-6 rounded-xl border border-violet-200 bg-violet-50 p-4">
+            <img src={qrSrc} alt="QR Code" width={110} height={110} className="rounded-xl border border-slate-200 bg-white shrink-0" />
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-semibold text-slate-900">Kod QR formularza</p>
+              <p className="text-xs text-slate-500">Skanuj telefonem, by otworzyć formularz. Udostępnij na materiałach reklamowych.</p>
+              <div className="flex gap-2 mt-1">
+                <a
+                  href={qrSrc}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary text-xs py-1.5 px-3"
+                >
+                  <Download size={13} /> Pobierz QR
+                </a>
+                <button onClick={() => setShowQR(false)} className="btn-ghost text-xs py-1.5 px-2.5 text-slate-500">
+                  <X size={13} />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Lewa strona: edytor */}
@@ -173,6 +215,7 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
                     <option value="number">NUMBER</option>
                     <option value="date">DATE</option>
                     <option value="textarea">TEXTAREA</option>
+                    <option value="file">FILE</option>
                   </select>
                   <button onClick={() => removeField(f.id)} className="text-rose-600 hover:bg-rose-50 rounded p-1"><Trash2 size={14} /></button>
                 </div>
@@ -190,18 +233,47 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
           </ul>
         </div>
 
-        {/* Prawa strona: kod HTML do skopiowania */}
+        {/* Prawa strona: kod HTML lub Asystent AI */}
         <div className="card flex flex-col">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900">Wygenerowany kod HTML</h3>
-            <button onClick={copyHtml} className="btn-secondary text-sm py-2 px-3">
-              {copied ? <><Check size={14} /> Skopiowano</> : <><Copy size={14} /> Kopiuj</>}
-            </button>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex rounded-xl border border-slate-200 overflow-hidden">
+              <button
+                onClick={() => setRightPanel("html")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                  rightPanel === "html" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                <Copy size={12} /> Kod HTML
+              </button>
+              <button
+                onClick={() => setRightPanel("ai")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                  rightPanel === "ai" ? "bg-violet-600 text-white" : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                <Sparkles size={12} /> Asystent AI
+                {plan === "free" && <span className="ml-1 rounded-full bg-amber-100 text-amber-700 px-1.5 py-0.5 text-[10px] font-semibold">Premium</span>}
+              </button>
+            </div>
+            {rightPanel === "html" && (
+              <button onClick={copyHtml} className="btn-secondary text-sm py-2 px-3">
+                {copied ? <><Check size={14} /> Skopiowano</> : <><Copy size={14} /> Kopiuj</>}
+              </button>
+            )}
           </div>
-          <pre className="mt-3 flex-1 overflow-auto rounded-xl bg-slate-950 text-slate-100 p-4 text-xs font-mono leading-relaxed">
-            <code>{html}</code>
-          </pre>
-          <p className="mt-3 text-xs text-slate-500">Wklej kod w WordPress (blok "Własny HTML"), Elementor, Webflow lub plain HTML.</p>
+
+          {rightPanel === "html" ? (
+            <>
+              <pre className="mt-3 flex-1 overflow-auto rounded-xl bg-slate-950 text-slate-100 p-4 text-xs font-mono leading-relaxed">
+                <code>{html}</code>
+              </pre>
+              <p className="mt-3 text-xs text-slate-500">Wklej kod w WordPress (blok "Własny HTML"), Elementor, Webflow lub plain HTML.</p>
+            </>
+          ) : (
+            <div className="mt-3 flex-1">
+              <AIPanel plan={plan} onAddField={addAiField} />
+            </div>
+          )}
         </div>
       </div>
     </section>

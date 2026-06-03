@@ -19,7 +19,7 @@ export interface Profile {
 /** Pojedynczy "klocek" w wizualnym kreatorze. */
 export interface FormField {
   id: string;
-  type: "text" | "email" | "tel" | "textarea" | "number" | "date";
+  type: "text" | "email" | "tel" | "textarea" | "number" | "date" | "file";
   label: string;
   name: string;
   placeholder?: string;
@@ -42,6 +42,8 @@ export interface FormConfig {
   formpage_bg_color?: string;
   formpage_accent_color?: string;
   formpage_footer?: string;
+  formpage_wide?: boolean;
+  form_type?: "standard" | "brief";
 }
 
 export interface FormRecord {

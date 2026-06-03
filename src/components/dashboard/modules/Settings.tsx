@@ -33,6 +33,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
     formpage_bg_color: "#f8fafc",
     formpage_accent_color: "#7c3aed",
     formpage_footer: "",
+    formpage_wide: false,
   });
   const autoBodyRef = useRef<HTMLTextAreaElement>(null);
   const customTplRef = useRef<HTMLTextAreaElement>(null);
@@ -57,6 +58,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
       formpage_bg_color: selectedForm.config?.formpage_bg_color ?? "#f8fafc",
       formpage_accent_color: selectedForm.config?.formpage_accent_color ?? "#7c3aed",
       formpage_footer: selectedForm.config?.formpage_footer ?? "",
+      formpage_wide: selectedForm.config?.formpage_wide ?? false,
     });
   }, [selectedForm?.id]);
 
@@ -87,6 +89,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
           formpage_bg_color: state.formpage_bg_color,
           formpage_accent_color: state.formpage_accent_color,
           formpage_footer: state.formpage_footer || undefined,
+          formpage_wide: isPremium && state.formpage_wide,
         },
       };
       await fetch(`/api/forms/${selectedForm.id}`, {
@@ -229,6 +232,10 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
         <label className="flex items-center gap-2 text-sm">
           <input disabled={!isPremium} type="checkbox" checked={state.formpage_enabled} onChange={(e) => set("formpage_enabled", e.target.checked)} />
           Aktywuj publiczny landing page formularza
+        </label>
+        <label className="flex items-center gap-2 text-sm mt-3">
+          <input disabled={!isPremium} type="checkbox" checked={state.formpage_wide} onChange={(e) => set("formpage_wide", e.target.checked)} />
+          Szeroki układ – 2 kolumny na desktopie (Brief / Wycena)
         </label>
         <label className="label mt-4">Tytuł</label>
         <input disabled={!isPremium} value={state.formpage_title} onChange={(e) => set("formpage_title", e.target.value)} className="input disabled:bg-slate-50" placeholder="Skontaktuj się z nami" />

@@ -32,13 +32,14 @@ export default async function FormPage({ params }: PageProps) {
   const bgColor = data.config?.formpage_bg_color ?? "#f8fafc";
   const accentColor = data.config?.formpage_accent_color ?? "#7c3aed";
   const footer = data.config?.formpage_footer;
+  const wide = data.config?.formpage_wide ?? false;
 
   return (
     <main
       className="min-h-screen flex items-center justify-center px-4 py-12"
       style={{ background: bgColor }}
     >
-      <div className="w-full max-w-md">
+      <div className={wide ? "w-full max-w-5xl mx-auto px-4" : "w-full max-w-md"}>
         {logoUrl && (
           <div className="flex justify-center mb-6">
             <img src={logoUrl} alt="logo" className="h-16 object-contain" />
@@ -54,6 +55,7 @@ export default async function FormPage({ params }: PageProps) {
           siteKey={siteKey}
           accentColor={accentColor}
           footer={footer}
+          wide={wide}
         />
       </div>
     </main>
