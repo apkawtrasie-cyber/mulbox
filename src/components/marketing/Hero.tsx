@@ -4,7 +4,7 @@ import { ArrowRight, PlayCircle, Check, Palette, Mail, Link2, BarChart3 } from "
 
 function HeroCard({ className, icon, title, subtitle }: { className: string; icon: React.ReactNode; title: string; subtitle: string }) {
   return (
-    <div className={`absolute z-20 hidden sm:flex items-center gap-3 rounded-2xl border border-slate-200/80 dark:border-[#2e2e50] bg-white dark:bg-[#16162a] px-4 py-3 shadow-[0_4px_24px_rgba(139,92,246,0.13)] dark:shadow-[0_4px_36px_rgba(139,92,246,0.55)] ${className}`}>
+    <div className={`absolute z-20 hidden sm:flex items-center gap-3 rounded-2xl border border-slate-200/80 dark:border-[#2e2e50] bg-white dark:bg-[#26263f] px-4 py-3 shadow-[0_4px_24px_rgba(139,92,246,0.13)] dark:shadow-[0_4px_36px_rgba(139,92,246,0.55)] ${className}`}>
       <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-brand-50 dark:bg-[#2e1f6e] text-brand-600 dark:text-brand-300">
         {icon}
       </span>
@@ -24,7 +24,8 @@ export function Hero() {
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-50/60 via-white to-white dark:hidden" />
       {/* Dark gradient + purple ambient glow */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden dark:block" style={{ background: "linear-gradient(135deg,#0d0d1a 0%,#12102a 40%,#1a103a 100%)" }} />
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden dark:block" style={{ background: "radial-gradient(ellipse at 72% 50%, rgba(109,40,217,0.45) 0%, rgba(139,92,246,0.2) 35%, transparent 68%)" }} />
+      {/* Wide glow from phone spreading left toward h1 */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden dark:block" style={{ background: "radial-gradient(ellipse 140% 100% at 62% 48%, rgba(124,58,237,0.6) 0%, rgba(139,92,246,0.28) 30%, rgba(139,92,246,0.1) 58%, transparent 80%)" }} />
 
       <div className="container-fluid grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center pt-12 sm:pt-16 lg:pt-24 pb-12 sm:pb-20">
         <div className="max-w-xl">
