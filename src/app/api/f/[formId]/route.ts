@@ -13,14 +13,25 @@ function extractEmail(data: Record<string, unknown>): string | null {
   return null;
 }
 
-/** Parsuje JSON lub form-urlencoded / multipart. */
-async function parseBody(req: Request): Promise<Record<string, unknown>> {
+/** Parsuje JSON lub form-urlencoded / multipart. Pliki zwraca osobno. */
+async function parseBody(
+  req: Request,
+): Promise<{ data: Record<string, unknown>; files: Array<{ field: string; file: File }> }> {
   const ct = req.headers.get("content-type") ?? "";
-  if (ct.includes("application/json")) return (await req.json()) as Record<string, unknown>;
+  if (ct.includes("application/json")) {
+    return { data: (await req.json()) as Record<string, unknown>, files: [] };
+  }
   const fd = await req.formData();
-  const out: Record<string, unknown> = {};
-  fd.forEach((v, k) => { out[k] = typeof v === "string" ? v : String(v); });
-  return out;
+  const data: Record<string, unknown> = {};
+  const files: Array<{ field: string; file: File }> = [];
+  fd.forEach((v, k) => {
+    if (v instanceof File && v.size > 0) {
+      files.push({ field: k, file: v });
+    } else {
+      data[k] = typeof v === "string" ? v : String(v);
+    }
+  });
+  return { data, files };
 }
 
 export async function POST(req: Request, { params }: { params: { formId: string } }) {
@@ -41,13 +52,34 @@ export async function POST(req: Request, { params }: { params: { formId: string 
   }
 
   const wantsJson = (req.headers.get("accept") ?? "").includes("application/json");
-  const body = await parseBody(req).catch(() => ({} as Record<string, unknown>));
-  const recaptchaToken = (body["g-recaptcha-response"] as string | undefined)
-    ?? (body["recaptchaToken"] as string | undefined)
+  const { data: rawData, files } = await parseBody(req).catch(() => ({ data: {} as Record<string, unknown>, files: [] }));
+  const recaptchaToken = (rawData["g-recaptcha-response"] as string | undefined)
+    ?? (rawData["recaptchaToken"] as string | undefined)
     ?? null;
-  // Czyścimy "techniczne" klucze z payloadu zapisywanego do bazy
-  delete body["g-recaptcha-response"];
-  delete body["recaptchaToken"];
+  delete rawData["g-recaptcha-response"];
+  delete rawData["recaptchaToken"];
+
+  // Upload plików do Supabase Storage
+  const fileLinks: Array<{ field: string; name: string; url: string }> = [];
+  for (const { field, file } of files) {
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${params.formId}/${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
+    const buffer = await file.arrayBuffer();
+    const { error: upErr } = await supabase.storage
+      .from("form-attachments")
+      .upload(path, buffer, { contentType: file.type, upsert: false });
+    if (!upErr) {
+      const { data: urlData } = supabase.storage.from("form-attachments").getPublicUrl(path);
+      fileLinks.push({ field, name: file.name, url: urlData.publicUrl });
+      rawData[field] = `[plik] ${file.name}`;
+    } else {
+      console.warn("[upload]", upErr.message);
+      rawData[field] = `[błąd uploadu] ${file.name}`;
+    }
+    void ext;
+  }
+  const body = rawData;
 
   // 2) reCAPTCHA
   // Weryfikuj tylko gdy:
@@ -91,6 +123,16 @@ export async function POST(req: Request, { params }: { params: { formId: string 
   const ownerEmail = form.notification_email ?? form.profiles?.email;
   const plan = form.profiles?.plan_type ?? "free";
 
+  // Sekcja HTML z linkami do załączników
+  const attachmentsHtml = fileLinks.length > 0
+    ? `<div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">
+        <p style="margin:0 0 8px;font-weight:600;color:#334155;font-size:13px">📎 Załączniki (${fileLinks.length}):</p>
+        ${fileLinks.map(f =>
+          `<p style="margin:4px 0;font-size:13px"><a href="${escapeHtml(f.url)}" style="color:#7c3aed">${escapeHtml(f.name)}</a></p>`
+        ).join("")}
+      </div>`
+    : "";
+
   // Mail 1 → właściciel
   if (ownerEmail) {
     const tplBody = form.custom_email_template
@@ -106,7 +148,7 @@ export async function POST(req: Request, { params }: { params: { formId: string 
       to: ownerEmail,
       replyTo: senderEmail ?? undefined,
       subject: `Nowa wiadomość: ${form.name}`,
-      html: `<div>${tplBody}${signature}${branding}</div>`,
+      html: `<div>${tplBody}${attachmentsHtml}${signature}${branding}</div>`,
     }).catch((e) => console.warn("[mail owner]", e));
   }
 
