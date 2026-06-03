@@ -52,3 +52,68 @@ html, body {
   background-clip: text;
   color: transparent;
 }
+
+/* ===== Dark mode ===== */
+
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: rgb(39, 39, 39);
+  color: #f0f0f0;
+}
+
+/* Tło */
+.dark .bg-white     { background-color: #2f2f2f; }
+.dark .bg-slate-50  { background-color: rgb(39, 39, 39); }
+.dark .bg-slate-100 { background-color: #323232; }
+.dark .bg-slate-200 { background-color: #383838; }
+
+/* Obramowania */
+.dark .border-slate-100 { border-color: #333; }
+.dark .border-slate-200 { border-color: #3d3d3d; }
+.dark .border-slate-300 { border-color: #4a4a4a; }
+
+/* Teksty slate → jasny */
+.dark .text-slate-900 { color: #f0f0f0; }
+.dark .text-slate-800 { color: #ececec; }
+.dark .text-slate-700 { color: #d0d0d0; }
+.dark .text-slate-600 { color: #bbbbbb; }
+.dark .text-slate-500 { color: #999999; }
+.dark .text-slate-400 { color: #777777; }
+
+/* Hover tła */
+.dark .hover\:bg-slate-50:hover  { background-color: #3a3a3a; }
+.dark .hover\:bg-slate-100:hover { background-color: #3d3d3d; }
+
+/* Utility klasy */
+.dark .card {
+  background-color: #2f2f2f;
+  border-color: #3d3d3d;
+}
+
+.dark .input {
+  background-color: #323232;
+  border-color: #3d3d3d;
+  color: #f0f0f0;
+}
+.dark .input::placeholder { color: #666; }
+
+.dark .label { color: #f0f0f0; }
+
+.dark .btn-secondary {
+  background-color: #323232;
+  border-color: #3d3d3d;
+  color: #f0f0f0;
+}
+.dark .btn-secondary:hover { background-color: #3a3a3a; }
+
+.dark .btn-ghost { color: #f0f0f0; }
+.dark .btn-ghost:hover { background-color: #3a3a3a; }
+
+/* Select options */
+.dark select option {
+  background-color: #323232;
+  color: #f0f0f0;
+}

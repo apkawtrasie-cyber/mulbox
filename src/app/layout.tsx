@@ -40,6 +40,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pl">
       <body>
+        {/* Zapobiega mignięciu złego motywu przed hydratacją */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('mulbox-theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
         {children}
         <PWARegister />
       </body>

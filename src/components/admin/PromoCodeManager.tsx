@@ -44,7 +44,8 @@ export function PromoCodeManager() {
     load();
   }
 
-  async function deactivate(id: string) {
+  async function deleteCode(id: string, code: string) {
+    if (!window.confirm(`Czy na pewno chcesz trwale usunąć kod "${code}"?\nTej operacji nie można cofnąć.`)) return;
     await fetch("/api/admin/promo", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -138,11 +139,9 @@ export function PromoCodeManager() {
                   </span>
                 </td>
                 <td className="py-2">
-                  {c.is_active && (
-                    <button onClick={() => deactivate(c.id)} className="text-rose-400 hover:text-rose-600 p-1 rounded">
-                      <Trash2 size={14} />
-                    </button>
-                  )}
+                  <button onClick={() => deleteCode(c.id, c.code)} className="text-rose-400 hover:text-rose-600 p-1 rounded" title="Usuń kod">
+                    <Trash2 size={14} />
+                  </button>
                 </td>
               </tr>
             ))}

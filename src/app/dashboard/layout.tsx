@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { isSupabaseConfigured, createServiceSupabase } from "@/lib/supabase-server";
 import { Logo } from "@/components/Logo";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
+import { ThemeToggle } from "@/components/dashboard/ThemeToggle";
 import { SetupRequired } from "@/components/SetupRequired";
 import { Shield } from "lucide-react";
 
@@ -35,6 +36,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </Link>
             )}
             <span className="hidden md:inline text-slate-600">{profile.email}</span>
+            <ThemeToggle />
             <LogoutButton />
           </div>
         </div>

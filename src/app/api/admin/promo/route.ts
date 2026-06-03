@@ -54,6 +54,6 @@ export async function DELETE(req: Request) {
   const { id } = (await req.json().catch(() => ({}))) as { id?: string };
   if (!id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
   const service = createServiceSupabase();
-  await service.from("promo_codes").update({ is_active: false }).eq("id", id);
+  await service.from("promo_codes").delete().eq("id", id);
   return NextResponse.json({ ok: true });
 }
