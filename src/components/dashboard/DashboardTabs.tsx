@@ -7,6 +7,7 @@ import { FormsList } from "./modules/FormsList";
 import { FormBuilder } from "./modules/FormBuilder";
 import { Inbox } from "./modules/Inbox";
 import { Settings } from "./modules/Settings";
+import { RedeemCode } from "./RedeemCode";
 
 type TabId = "forms" | "builder" | "inbox" | "settings";
 
@@ -42,6 +43,11 @@ export function DashboardTabs({ profile, forms, submissions }: Props) {
       <aside className="card lg:sticky lg:top-24 self-start">
         <p className="text-xs uppercase tracking-wide text-slate-500">Witaj,</p>
         <p className="text-lg font-semibold text-slate-900 truncate">{profile.full_name || profile.email}</p>
+        {profile.plan_expires_at && (
+          <p className="mt-1 text-xs text-amber-600">
+            Plan wygasa: {new Date(profile.plan_expires_at).toLocaleDateString("pl-PL")}
+          </p>
+        )}
         <nav className="mt-5 flex lg:flex-col gap-1 overflow-x-auto">
           {TABS.map((t) => {
             const Icon = t.icon;
@@ -59,6 +65,7 @@ export function DashboardTabs({ profile, forms, submissions }: Props) {
             );
           })}
         </nav>
+        <RedeemCode />
       </aside>
 
       {/* Content */}

@@ -11,6 +11,7 @@ export interface Profile {
   email: string;
   full_name: string | null;
   plan_type: PlanType;
+  plan_expires_at: string | null;
   role: UserRole;
   created_at: string;
 }

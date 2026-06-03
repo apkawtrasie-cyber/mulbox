@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { createServerSupabase, isSupabaseConfigured } from "@/lib/supabase-server";
 import { SetupRequired } from "@/components/SetupRequired";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { PromoCodeManager } from "@/components/admin/PromoCodeManager";
 import type { Profile, FormRecord } from "@/lib/types";
 
 export const revalidate = 0;
@@ -59,6 +60,11 @@ export default async function AdminPage() {
         </section>
 
         <AdminTable forms={formsArr} profiles={profilesArr} />
+
+        <section>
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Kody promocyjne</h2>
+          <PromoCodeManager />
+        </section>
       </main>
     </div>
   );

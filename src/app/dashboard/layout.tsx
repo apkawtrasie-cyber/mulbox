@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { isSupabaseConfigured } from "@/lib/supabase-server";
+import { isSupabaseConfigured, createServiceSupabase } from "@/lib/supabase-server";
 import { Logo } from "@/components/Logo";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
 import { SetupRequired } from "@/components/SetupRequired";
@@ -9,6 +9,17 @@ import { Shield } from "lucide-react";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   if (!isSupabaseConfigured()) return <SetupRequired />;
   const { profile } = await requireUser();
+
+  // Automatycznie zdegraduj plan jeśli minął termin
+  if (profile.plan_expires_at && profile.plan_type !== "free") {
+    const expired = new Date(profile.plan_expires_at) < new Date();
+    if (expired) {
+      await createServiceSupabase()
+        .from("profiles")
+        .update({ plan_type: "free", plan_expires_at: null })
+        .eq("id", profile.id);
+    }
+  }
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
