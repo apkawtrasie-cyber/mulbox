@@ -43,14 +43,14 @@ export function DashboardTabs({ profile, forms, submissions }: Props) {
     <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
       {/* Sidebar */}
       <aside className="card lg:sticky lg:top-24 self-start">
-        <p className="text-xs uppercase tracking-wide text-slate-500">Witaj,</p>
-        <p className="text-lg font-semibold text-slate-900 truncate">{profile.full_name || profile.email}</p>
+        <p className="text-sm sm:text-xs uppercase tracking-wide text-slate-500">Witaj,</p>
+        <p className="text-xl sm:text-lg font-semibold text-slate-900 truncate">{profile.full_name || profile.email}</p>
         {profile.plan_expires_at && (
           <p className="mt-1 text-xs text-amber-600">
             Plan wygasa: {new Date(profile.plan_expires_at).toLocaleDateString("pl-PL")}
           </p>
         )}
-        <nav className="mt-5 flex lg:flex-col gap-1 overflow-x-auto">
+        <nav className="mt-5 grid grid-cols-3 sm:grid-cols-5 lg:flex lg:flex-col gap-2 lg:gap-1">
           {TABS.map((t) => {
             const Icon = t.icon;
             const isActive = active === t.id;
@@ -58,11 +58,11 @@ export function DashboardTabs({ profile, forms, submissions }: Props) {
               <button
                 key={t.id}
                 onClick={() => setActive(t.id)}
-                className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition ${
+                className={`flex flex-col sm:flex-row lg:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2 rounded-xl px-2 py-3 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium transition ${
                   isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <Icon size={16} /> {t.label}
+                <Icon size={18} /><span>{t.label}</span>
               </button>
             );
           })}

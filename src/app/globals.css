@@ -119,3 +119,12 @@ html, body {
   background-color: #323232;
   color: #f0f0f0;
 }
+
+/* Dashboard mobile: +2 px font boost */
+@media (max-width: 1024px) {
+  .dashboard-root .text-xs   { font-size: 0.875rem;  line-height: 1.25rem; }
+  .dashboard-root .text-sm   { font-size: 1rem;      line-height: 1.5rem; }
+  .dashboard-root .text-base { font-size: 1.125rem;  line-height: 1.75rem; }
+  .dashboard-root .text-lg   { font-size: 1.25rem;   line-height: 1.75rem; }
+  .dashboard-root .text-xl   { font-size: 1.375rem;  line-height: 1.875rem; }
+}
