@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Lock, Globe, Shield, Mail } from "lucide-react";
 import type { FormRecord, PlanType } from "@/lib/types";
@@ -29,7 +29,13 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
     formpage_enabled: false,
     formpage_title: "",
     formpage_description: "",
+    formpage_logo_url: "",
+    formpage_bg_color: "#f8fafc",
+    formpage_accent_color: "#7c3aed",
+    formpage_footer: "",
   });
+  const autoBodyRef = useRef<HTMLTextAreaElement>(null);
+  const customTplRef = useRef<HTMLTextAreaElement>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -47,6 +53,10 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
       formpage_enabled: selectedForm.config?.formpage_enabled ?? false,
       formpage_title: selectedForm.config?.formpage_title ?? "",
       formpage_description: selectedForm.config?.formpage_description ?? "",
+      formpage_logo_url: selectedForm.config?.formpage_logo_url ?? "",
+      formpage_bg_color: selectedForm.config?.formpage_bg_color ?? "#f8fafc",
+      formpage_accent_color: selectedForm.config?.formpage_accent_color ?? "#7c3aed",
+      formpage_footer: selectedForm.config?.formpage_footer ?? "",
     });
   }, [selectedForm?.id]);
 
@@ -73,6 +83,10 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
           formpage_enabled: isPremium && state.formpage_enabled,
           formpage_title: state.formpage_title,
           formpage_description: state.formpage_description,
+          formpage_logo_url: state.formpage_logo_url || undefined,
+          formpage_bg_color: state.formpage_bg_color,
+          formpage_accent_color: state.formpage_accent_color,
+          formpage_footer: state.formpage_footer || undefined,
         },
       };
       await fetch(`/api/forms/${selectedForm.id}`, {
@@ -87,6 +101,19 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
   function set<K extends keyof typeof state>(key: K, value: (typeof state)[K]) {
     setState((s) => ({ ...s, [key]: value }));
   }
+
+  function insertTag(tag: string, ref: React.RefObject<HTMLTextAreaElement>, field: "autoresponder_body" | "custom_email_template") {
+    const el = ref.current;
+    const token = `{${tag}}`;
+    if (!el) { set(field, (state[field] as string) + token); return; }
+    const start = el.selectionStart ?? (state[field] as string).length;
+    const end = el.selectionEnd ?? start;
+    const cur = state[field] as string;
+    set(field, cur.slice(0, start) + token + cur.slice(end));
+    setTimeout(() => { el.focus(); el.setSelectionRange(start + token.length, start + token.length); }, 0);
+  }
+
+  const fieldTags = selectedForm?.config?.fields?.map((f) => f.name) ?? [];
 
   return (
     <section className="space-y-6">
@@ -142,10 +169,25 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
 
       <Card title="Personalizacja powiadomień" icon={<Mail size={18} />}>
         <label className="label">Szablon maila do Ciebie (powiadomienie)</label>
-        <textarea rows={4} value={state.custom_email_template} onChange={(e) => set("custom_email_template", e.target.value)}
+        <textarea
+          ref={customTplRef}
+          rows={4} value={state.custom_email_template}
+          onChange={(e) => set("custom_email_template", e.target.value)}
           placeholder={"Cześć! Masz nowego leada od {name} ({email}).\n\nWiadomość:\n{message}"}
-          className="input resize-none font-mono text-xs" />
-        <p className="mt-1 text-xs text-slate-500">Tagi dostępne: <code>{"{name}, {email}, {message}"}</code> – wszystkie pola formularza.</p>
+          className="input resize-none font-mono text-xs"
+        />
+        {fieldTags.length > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-slate-400">Wstaw:</span>
+            {fieldTags.map((tag) => (
+              <button key={tag} type="button"
+                onClick={() => insertTag(tag, customTplRef, "custom_email_template")}
+                className="rounded bg-violet-50 px-2 py-0.5 font-mono text-xs text-violet-700 hover:bg-violet-100">
+                {`{${tag}}`}
+              </button>
+            ))}
+          </div>
+        )}
 
         <label className="label mt-4">Twój podpis (footer maila)</label>
         <textarea rows={2} value={state.notification_signature} onChange={(e) => set("notification_signature", e.target.value)}
@@ -161,9 +203,26 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
         <input disabled={!isPremium} value={state.autoresponder_subject} onChange={(e) => set("autoresponder_subject", e.target.value)}
           placeholder="Dziękujemy za kontakt!" className="input disabled:bg-slate-50" />
         <label className="label mt-3">Treść</label>
-        <textarea disabled={!isPremium} rows={4} value={state.autoresponder_body} onChange={(e) => set("autoresponder_body", e.target.value)}
+        <textarea
+          ref={autoBodyRef}
+          disabled={!isPremium} rows={5}
+          value={state.autoresponder_body}
+          onChange={(e) => set("autoresponder_body", e.target.value)}
           placeholder={"Cześć {name},\n\ndziękujemy za wiadomość. Odezwiemy się najszybciej jak to możliwe."}
-          className="input resize-none disabled:bg-slate-50" />
+          className="input resize-none disabled:bg-slate-50"
+        />
+        {fieldTags.length > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-slate-400">Wstaw:</span>
+            {fieldTags.map((tag) => (
+              <button key={tag} type="button" disabled={!isPremium}
+                onClick={() => insertTag(tag, autoBodyRef, "autoresponder_body")}
+                className="rounded bg-violet-50 px-2 py-0.5 font-mono text-xs text-violet-700 hover:bg-violet-100 disabled:opacity-40">
+                {`{${tag}}`}
+              </button>
+            ))}
+          </div>
+        )}
       </Card>
 
       <Card title="Dynamiczna strona /p/[id]" icon={<Globe size={18} />} premium={!isPremium}>
@@ -176,6 +235,44 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
         <label className="label mt-3">Opis</label>
         <textarea disabled={!isPremium} rows={2} value={state.formpage_description} onChange={(e) => set("formpage_description", e.target.value)}
           placeholder="Wypełnij formularz, a odezwiemy się do Ciebie." className="input resize-none disabled:bg-slate-50" />
+
+        <label className="label mt-4">URL logo (adres obrazka)</label>
+        <input disabled={!isPremium} value={state.formpage_logo_url} onChange={(e) => set("formpage_logo_url", e.target.value)}
+          placeholder="https://twojastrona.pl/logo.png" className="input disabled:bg-slate-50" />
+        {state.formpage_logo_url && (
+          <img src={state.formpage_logo_url} alt="podgląd logo" className="mt-2 h-12 object-contain rounded border border-slate-100" />
+        )}
+
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          <div>
+            <label className="label">Kolor tła</label>
+            <div className="flex items-center gap-2">
+              <input disabled={!isPremium} type="color" value={state.formpage_bg_color}
+                onChange={(e) => set("formpage_bg_color", e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-slate-200 disabled:opacity-50" />
+              <input disabled={!isPremium} value={state.formpage_bg_color}
+                onChange={(e) => set("formpage_bg_color", e.target.value)}
+                className="input font-mono text-xs disabled:bg-slate-50" />
+            </div>
+          </div>
+          <div>
+            <label className="label">Kolor przycisku</label>
+            <div className="flex items-center gap-2">
+              <input disabled={!isPremium} type="color" value={state.formpage_accent_color}
+                onChange={(e) => set("formpage_accent_color", e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-slate-200 disabled:opacity-50" />
+              <input disabled={!isPremium} value={state.formpage_accent_color}
+                onChange={(e) => set("formpage_accent_color", e.target.value)}
+                className="input font-mono text-xs disabled:bg-slate-50" />
+            </div>
+          </div>
+        </div>
+
+        <label className="label mt-4">Stopka strony formularza</label>
+        <textarea disabled={!isPremium} rows={2} value={state.formpage_footer}
+          onChange={(e) => set("formpage_footer", e.target.value)}
+          placeholder="© 2024 Twoja Firma · ul. Przykładowa 1 · kontakt@firma.pl"
+          className="input resize-none disabled:bg-slate-50" />
       </Card>
     </section>
   );

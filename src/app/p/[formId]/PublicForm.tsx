@@ -9,9 +9,11 @@ interface Props {
   fields: FormField[];
   submitLabel: string;
   siteKey: string;
+  accentColor?: string;
+  footer?: string;
 }
 
-export default function PublicForm({ formId, fields, submitLabel, siteKey }: Props) {
+export default function PublicForm({ formId, fields, submitLabel, siteKey, accentColor, footer }: Props) {
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [captchaDone, setCaptchaDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,9 +124,16 @@ export default function PublicForm({ formId, fields, submitLabel, siteKey }: Pro
         type="submit"
         disabled={loading || (hasCaptcha && !captchaDone)}
         className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+        style={accentColor ? { backgroundColor: accentColor, borderColor: accentColor } : {}}
       >
         {loading ? "Wysyłanie…" : submitLabel}
       </button>
+
+      {footer && (
+        <p className="mt-4 border-t border-slate-100 pt-4 text-center text-xs text-slate-500 whitespace-pre-line">
+          {footer}
+        </p>
+      )}
 
       <p className="text-center text-xs text-slate-400">
         Powered by{" "}

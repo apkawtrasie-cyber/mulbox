@@ -37,6 +37,10 @@ export interface FormConfig {
   formpage_enabled?: boolean;
   formpage_title?: string;
   formpage_description?: string;
+  formpage_logo_url?: string;
+  formpage_bg_color?: string;
+  formpage_accent_color?: string;
+  formpage_footer?: string;
 }
 
 export interface FormRecord {

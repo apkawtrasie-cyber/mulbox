@@ -28,10 +28,22 @@ export default async function FormPage({ params }: PageProps) {
   const desc = data.config?.formpage_description || "Wypełnij formularz, a odezwiemy się do Ciebie.";
   const submitLabel = data.config?.submit_label || "Wyślij wiadomość";
   const siteKey = data.recaptcha_site_key ?? process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
+  const logoUrl = data.config?.formpage_logo_url;
+  const bgColor = data.config?.formpage_bg_color ?? "#f8fafc";
+  const accentColor = data.config?.formpage_accent_color ?? "#7c3aed";
+  const footer = data.config?.formpage_footer;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-white flex items-center justify-center px-4 py-12">
+    <main
+      className="min-h-screen flex items-center justify-center px-4 py-12"
+      style={{ background: bgColor }}
+    >
       <div className="w-full max-w-md">
+        {logoUrl && (
+          <div className="flex justify-center mb-6">
+            <img src={logoUrl} alt="logo" className="h-16 object-contain" />
+          </div>
+        )}
         <h1 className="text-3xl font-bold text-slate-900 text-center">{title}</h1>
         <p className="mt-2 text-center text-slate-600">{desc}</p>
 
@@ -40,6 +52,8 @@ export default async function FormPage({ params }: PageProps) {
           fields={data.config.fields ?? []}
           submitLabel={submitLabel}
           siteKey={siteKey}
+          accentColor={accentColor}
+          footer={footer}
         />
       </div>
     </main>
