@@ -22,10 +22,10 @@ export function Hero() {
     <section className="relative overflow-hidden">
       {/* Light gradient */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-50/60 via-white to-white dark:hidden" />
-      {/* Dark gradient + purple ambient glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden dark:block" style={{ background: "linear-gradient(135deg,#0d0d1a 0%,#12102a 40%,#1a103a 100%)" }} />
-      {/* Wide glow from phone spreading left toward h1 */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden dark:block" style={{ background: "radial-gradient(ellipse 140% 100% at 62% 48%, rgba(124,58,237,0.6) 0%, rgba(139,92,246,0.28) 30%, rgba(139,92,246,0.1) 58%, transparent 80%)" }} />
+      {/* Dark base – deep space navy */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden dark:block" style={{ background: "#070712" }} />
+      {/* Purple burst from phone spreading toward h1 */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden dark:block" style={{ background: "radial-gradient(ellipse 110% 95% at 65% 46%, rgba(109,40,217,0.85) 0%, rgba(124,58,237,0.55) 18%, rgba(139,92,246,0.25) 40%, rgba(109,40,217,0.08) 62%, transparent 78%)" }} />
 
       <div className="container-fluid grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center pt-12 sm:pt-16 lg:pt-24 pb-12 sm:pb-20">
         <div className="max-w-xl">
@@ -79,10 +79,10 @@ export function Hero() {
           />
 
           {/* 4 feature cards */}
-          <HeroCard className="top-[6%] left-[2%]"  icon={<Palette size={18} />}   title="Dostosuj"   subtitle="Kolory, czcionki, układ i treści" />
-          <HeroCard className="top-[33%] right-[2%]" icon={<Mail size={18} />}      title="Zbieraj"    subtitle="wiadomości i leady" />
-          <HeroCard className="top-[58%] left-[2%]"  icon={<Link2 size={18} />}     title="Udostępnij" subtitle="link, kod QR lub osadzenie" />
-          <HeroCard className="bottom-[4%] right-[2%]" icon={<BarChart3 size={18} />} title="Zarządzaj"  subtitle="swoją listą kontaktów" />
+          <HeroCard className="top-[18%] left-[2%]"  icon={<Palette size={18} />}   title="Dostosuj"   subtitle="Kolory, czcionki, układ i treści" />
+          <HeroCard className="top-[35%] right-[2%]" icon={<Mail size={18} />}      title="Zbieraj"    subtitle="wiadomości i leady" />
+          <HeroCard className="top-[57%] left-[2%]"  icon={<Link2 size={18} />}     title="Udostępnij" subtitle="link, kod QR lub osadzenie" />
+          <HeroCard className="top-[65%] right-[2%]" icon={<BarChart3 size={18} />} title="Zarządzaj"  subtitle="swoją listą kontaktów" />
         </div>
       </div>
     </section>
