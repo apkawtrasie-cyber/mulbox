@@ -20,7 +20,7 @@ export function Trust() {
           <span key={l} className="opacity-70 hover:opacity-100 transition">{l}</span>
         ))}
       </div>
-      <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 rounded-2xl border border-slate-200 bg-white p-6">
+      <div className="mt-10 relative overflow-hidden grid grid-cols-2 lg:grid-cols-4 gap-4 rounded-2xl border border-brand-100 dark:border-[#3a2a60] bg-gradient-to-br from-white via-[#f5f0ff] to-[#ede5ff] dark:from-[#1e1a3a] dark:via-[#251d4a] dark:to-[#2d1f5a] p-6 shadow-[0_4px_24px_rgba(139,92,246,0.1)]">
         {STATS.map(({ icon: Icon, value, label }) => (
           <div key={label} className="flex items-center gap-3">
             <span className="grid h-12 w-12 place-items-center rounded-xl bg-brand-50 text-brand-700">

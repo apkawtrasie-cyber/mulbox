@@ -37,8 +37,10 @@ function FaqSection() {
     },
   ];
   return (
-    <section id="faq" className="section bg-slate-50">
-      <div className="container-fluid max-w-4xl">
+    <section id="faq" className="section bg-slate-50 relative overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute bottom-0 right-0 w-[700px] h-[450px]" style={{ background: "radial-gradient(ellipse at 90% 100%, rgba(139,92,246,0.22) 0%, rgba(180,130,255,0.12) 35%, transparent 65%)" }} />
+      <div aria-hidden className="pointer-events-none absolute bottom-0 right-0 w-[400px] h-[300px] hidden dark:block" style={{ background: "radial-gradient(ellipse at 95% 100%, rgba(109,40,217,0.45) 0%, rgba(139,92,246,0.2) 40%, transparent 70%)" }} />
+      <div className="container-fluid max-w-4xl relative">
         <h2 className="h2 text-center text-slate-900">Najczęstsze pytania</h2>
         <div className="mt-10 space-y-3">
           {FAQ.map((it) => (
