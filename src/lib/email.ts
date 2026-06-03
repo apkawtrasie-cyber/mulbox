@@ -44,15 +44,52 @@ export function applyTemplate(template: string, data: Record<string, unknown>): 
   });
 }
 
+/** Mapa angielskich nazw pól na polskie etykiety. */
+const PL_LABELS: Record<string, string> = {
+  name: "Imię i nazwisko",
+  full_name: "Imię i nazwisko",
+  fullname: "Imię i nazwisko",
+  first_name: "Imię",
+  last_name: "Nazwisko",
+  email: "E-mail",
+  phone: "Telefon",
+  tel: "Telefon",
+  mobile: "Telefon komórkowy",
+  message: "Wiadomość",
+  msg: "Wiadomość",
+  subject: "Temat",
+  company: "Firma",
+  company_name: "Nazwa firmy",
+  website: "Strona internetowa",
+  address: "Adres",
+  city: "Miasto",
+  zip: "Kod pocztowy",
+  country: "Kraj",
+  budget: "Budżet",
+  deadline: "Termin realizacji",
+  description: "Opis projektu",
+  project_name: "Nazwa projektu",
+  project_type: "Typ projektu",
+  notes: "Uwagi",
+  additional_info: "Dodatkowe informacje",
+  service: "Usługa",
+  quantity: "Ilość",
+  nip: "NIP",
+};
+
+function plLabel(key: string): string {
+  return PL_LABELS[key.toLowerCase()] ?? key.replace(/_/g, " ");
+}
+
 /** Domyślne renderowanie maila powiadomienia, gdy nie ustawiono custom_email_template. */
 export function renderDefaultNotification(formName: string, data: Record<string, unknown>): string {
   const rows = Object.entries(data)
-    .map(([k, v]) => `<tr><td style="padding:8px;border-bottom:1px solid #eee;color:#64748b">${escapeHtml(k)}</td><td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(String(v ?? ""))}</td></tr>`)
+    .map(([k, v]) => `<tr><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;color:#64748b;white-space:nowrap;font-size:13px">${escapeHtml(plLabel(k))}</td><td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:14px">${escapeHtml(String(v ?? ""))}</td></tr>`)
     .join("");
   return `<div style="font-family:Inter,Arial,sans-serif;color:#0f172a;max-width:560px;margin:0 auto">
-    <h2 style="margin:0 0 4px">Nowa wiadomość z formularza</h2>
-    <p style="margin:0;color:#64748b">${escapeHtml(formName)}</p>
-    <table style="width:100%;margin-top:16px;border-collapse:collapse;font-size:14px">${rows}</table>
+    <h2 style="margin:0 0 4px;font-size:18px">Nowe zgłoszenie z formularza</h2>
+    <p style="margin:0;color:#64748b;font-size:14px">${escapeHtml(formName)}</p>
+    <table style="width:100%;margin-top:16px;border-collapse:collapse">${rows}</table>
   </div>`;
 }
 

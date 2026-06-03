@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Lock, Globe, Shield, Mail } from "lucide-react";
+import { Save, Lock, Globe, Mail } from "lucide-react";
 import type { FormRecord, PlanType } from "@/lib/types";
 
 interface Props {
@@ -154,20 +154,6 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
         <input disabled={!isPremium} value={state.redirect_url} onChange={(e) => set("redirect_url", e.target.value)}
           placeholder="https://twojastrona.pl/dziekujemy" className="input disabled:bg-slate-50" />
         <p className="mt-1 text-xs text-slate-500">Po wysłaniu formularza klient zostanie przekierowany pod ten adres.</p>
-      </Card>
-
-      <Card title="Integracja reCAPTCHA" icon={<Shield size={18} />} premium={!isPremium}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="label">Site Key</label>
-            <input disabled={!isPremium} value={state.recaptcha_site_key} onChange={(e) => set("recaptcha_site_key", e.target.value)} className="input font-mono text-xs disabled:bg-slate-50" />
-          </div>
-          <div>
-            <label className="label">Secret Key</label>
-            <input disabled={!isPremium} type="password" value={state.recaptcha_secret_key} onChange={(e) => set("recaptcha_secret_key", e.target.value)} className="input font-mono text-xs disabled:bg-slate-50" />
-          </div>
-        </div>
-        <p className="mt-2 text-xs text-slate-500">Klucze pobierzesz z konsoli Google reCAPTCHA (v2 lub v3).</p>
       </Card>
 
       <Card title="Personalizacja powiadomień" icon={<Mail size={18} />}>
