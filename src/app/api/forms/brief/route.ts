@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase-server";
 
+const PODSTAWOWY_FIELDS = [
+  { type: "text",     label: "Imię i nazwisko",  name: "name",        placeholder: "Jan Kowalski",              required: true },
+  { type: "text",     label: "Nazwa firmy",     name: "company",     placeholder: "Firma Sp. z o.o." },
+  { type: "text",     label: "Adres",           name: "address",     placeholder: "ul. Przykładowa 1, Warszawa" },
+  { type: "email",    label: "E-mail",          name: "email",       placeholder: "jan@firma.pl",               required: true },
+  { type: "tel",      label: "Telefon",         name: "phone",       placeholder: "+48 123 456 789" },
+  { type: "textarea", label: "Wiadomość",       name: "message",     placeholder: "Opisz swoje zapytanie…",      required: true },
+  { type: "file",     label: "Załączniki / zdjęcia", name: "attachments" },
+];
+
 const WYCENA_FIELDS = [
   { type: "text",     label: "Imię i nazwisko",                   name: "name",         placeholder: "Jan Kowalski",                                    required: true },
   { type: "email",    label: "Email kontaktowy",                   name: "email",        placeholder: "jan@firma.pl",                                    required: true },
@@ -30,27 +40,54 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { template = "wycena" } = await req.json().catch(() => ({})) as { template?: string };
-  const isAnkieta = template === "ankieta";
+  const { template = "podstawowy" } = await req.json().catch(() => ({})) as { template?: string };
 
-  const rawFields = isAnkieta ? ANKIETA_FIELDS : WYCENA_FIELDS;
-  const fields = rawFields.map((f) => ({ ...f, id: crypto.randomUUID() }));
+  const CONFIGS: Record<string, {
+    fields: typeof PODSTAWOWY_FIELDS;
+    name: string;
+    title: string;
+    description: string;
+    submit_label: string;
+  }> = {
+    podstawowy: {
+      fields: PODSTAWOWY_FIELDS,
+      name: "Brief (podstawowy)",
+      title: "Wyślij zapytanie",
+      description: "Wypełnij formularz, a odezwiemy się do Ciebie najszybciej jak to możliwe.",
+      submit_label: "Wyślij zapytanie",
+    },
+    wycena: {
+      fields: WYCENA_FIELDS,
+      name: "Brief / Zapytanie ofertowe",
+      title: "Wyślij brief",
+      description: "Opisz swój projekt, a przygotujemy dla Ciebie wycenę w ciągu 24h.",
+      submit_label: "Wyślij brief",
+    },
+    ankieta: {
+      fields: ANKIETA_FIELDS,
+      name: "Ankieta satysfakcji",
+      title: "Ankieta satysfakcji",
+      description: "Twoja opinia jest dla nas ważna. Zajmie to tylko chwilę.",
+      submit_label: "Wyślij odpowiedzi",
+    },
+  };
+
+  const cfg = CONFIGS[template] ?? CONFIGS.podstawowy;
+  const fields = cfg.fields.map((f) => ({ ...f, id: crypto.randomUUID() }));
 
   const { data, error } = await supabase
     .from("forms")
     .insert({
       user_id: user.id,
-      name: isAnkieta ? "Ankieta satysfakcji" : "Brief / Zapytanie ofertowe",
+      name: cfg.name,
       is_active: true,
       config: {
         fields,
         form_type: "brief",
         formpage_wide: true,
-        formpage_title: isAnkieta ? "Ankieta satysfakcji" : "Wyślij brief",
-        formpage_description: isAnkieta
-          ? "Twoja opinia jest dla nas ważna. Zajmie to tylko chwilę."
-          : "Opisz swój projekt, a przygotujemy dla Ciebie wycenę w ciągu 24h.",
-        submit_label: isAnkieta ? "Wyślij odpowiedzi" : "Wyślij brief",
+        formpage_title: cfg.title,
+        formpage_description: cfg.description,
+        submit_label: cfg.submit_label,
       },
     })
     .select()

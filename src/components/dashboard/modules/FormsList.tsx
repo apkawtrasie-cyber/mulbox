@@ -26,7 +26,7 @@ export function FormsList({ forms, onSelect }: Props) {
         await fetch("/api/forms/brief", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ template: "wycena" }),
+          body: JSON.stringify({ template: "podstawowy" }),
         });
       } else {
         await fetch("/api/forms", { method: "POST" });

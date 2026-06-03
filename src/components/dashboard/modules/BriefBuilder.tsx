@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, ClipboardList, Plus, ExternalLink, Pencil } from "lucide-react";
+import { FileText, ClipboardList, Plus, ExternalLink, Pencil, LayoutTemplate } from "lucide-react";
 import type { FormRecord, PlanType } from "@/lib/types";
 
 interface Props {
@@ -11,30 +11,41 @@ interface Props {
   onEditForm: (id: string) => void;
 }
 
-const TEMPLATES = [
+interface Template {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  description: string;
+  fields: string[];
+  isDefault: boolean;
+}
+
+const TEMPLATES: Template[] = [
+  {
+    id: "podstawowy",
+    label: "Brief podstawowy",
+    icon: LayoutTemplate,
+    description: "Uniwersalny szablon startowy: dane kontaktowe, adres, wiadomość i zdjęcia. Resztę pól dopisujesz samodzielnie w Kreatorze.",
+    fields: ["Imię i nazwisko", "Nazwa firmy", "Adres", "E-mail", "Telefon", "Wiadomość", "Załączniki / zdjęcia"],
+    isDefault: true,
+  },
   {
     id: "wycena",
     label: "Brief / Wycena",
     icon: FileText,
     description: "Klient opisuje projekt, budżet i termin. Idealny do zbierania zapytań ofertowych.",
-    fields: [
-      "Imię i nazwisko", "Email", "Telefon", "Nazwa firmy",
-      "Rodzaj usługi", "Opis projektu", "Budżet", "Termin realizacji",
-      "Zdjęcia / materiały", "Dodatkowe informacje",
-    ],
+    fields: ["Imię i nazwisko", "Email", "Telefon", "Nazwa firmy", "Rodzaj usługi", "Opis projektu", "Budżet", "Termin realizacji", "Zdjęcia / materiały", "Dodatkowe informacje"],
+    isDefault: false,
   },
   {
     id: "ankieta",
     label: "Ankieta satysfakcji",
     icon: ClipboardList,
     description: "Zbierz opinie klientów po wykonaniu usługi. Sprawdź co możesz poprawić.",
-    fields: [
-      "Imię i nazwisko", "Email", "Skąd nas znasz?",
-      "Ocena (1–10)", "Co się podobało?", "Co poprawić?",
-      "Czy polecisz nas?", "Dodatkowe uwagi",
-    ],
+    fields: ["Imię i nazwisko", "Email", "Skąd nas znasz?", "Ocena (1–10)", "Co się podobało?", "Co poprawić?", "Czy polecisz nas?", "Dodatkowe uwagi"],
+    isDefault: false,
   },
-] as const;
+];
 
 export function BriefBuilder({ briefForms, onEditForm }: Props) {
   const router = useRouter();
@@ -111,7 +122,7 @@ export function BriefBuilder({ briefForms, onEditForm }: Props) {
 
       <div>
         <h2 className="text-sm font-semibold text-slate-700 mb-3">Utwórz nowy z szablonu</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {TEMPLATES.map((tpl) => {
             const Icon = tpl.icon;
             return (
@@ -120,10 +131,17 @@ export function BriefBuilder({ briefForms, onEditForm }: Props) {
                 className="card flex flex-col gap-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 shrink-0">
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${
+                    tpl.isDefault ? "bg-violet-100 text-violet-700" : "bg-brand-50 text-brand-700"
+                  }`}>
                     <Icon size={20} />
                   </span>
-                  <h3 className="font-semibold text-slate-900">{tpl.label}</h3>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 leading-tight">{tpl.label}</h3>
+                    {tpl.isDefault && (
+                      <span className="inline-block mt-0.5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-semibold px-2 py-0.5">domyślny</span>
+                    )}
+                  </div>
                 </div>
 
                 <p className="text-sm text-slate-500">{tpl.description}</p>
