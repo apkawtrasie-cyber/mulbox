@@ -39,7 +39,7 @@ Cel formularza: ${goal}
 Odpowiedź (tylko JSON array, nic więcej):`;
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -52,8 +52,17 @@ Odpowiedź (tylko JSON array, nic więcej):`;
 
   if (!res.ok) {
     const errText = await res.text();
-    console.error("[ai] Gemini error:", errText);
-    return NextResponse.json({ error: "Błąd API Gemini. Sprawdź klucz GEMINI_API_KEY." }, { status: 502 });
+    console.error("[ai] Gemini error", res.status, errText);
+    if (res.status === 429) {
+      return NextResponse.json(
+        { error: "Przekroczono limit zapytań Gemini API (bezpłatny poziom). Odczekaj kilka minut lub włącz billing na https://aistudio.google.com" },
+        { status: 429 },
+      );
+    }
+    if (res.status === 400) {
+      return NextResponse.json({ error: "Nieprawidłowy klucz Gemini API. Sprawdź GEMINI_API_KEY." }, { status: 502 });
+    }
+    return NextResponse.json({ error: `Błąd API Gemini (${res.status}). Spróbuj ponownie.` }, { status: 502 });
   }
 
   const data = await res.json() as {
