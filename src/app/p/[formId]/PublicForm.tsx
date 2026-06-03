@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, FileText as FileIcon, X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { FormField } from "@/lib/types";
 
 interface Props {
@@ -154,14 +154,24 @@ export default function PublicForm({ formId, fields, submitLabel, siteKey, accen
   );
 }
 
+interface Preview { name: string; url: string; isImage: boolean; }
+
 function FileDropzone({ field }: { field: FormField }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [names, setNames] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<Preview[]>([]);
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   function applyFiles(files: FileList | null) {
-    if (!files || files.length === 0) { setNames(null); return; }
-    setNames(Array.from(files).map((f) => f.name).join(", "));
+    previews.forEach((p) => { if (p.isImage) URL.revokeObjectURL(p.url); });
+    if (!files || files.length === 0) { setPreviews([]); return; }
+    setPreviews(
+      Array.from(files).map((f) => ({
+        name: f.name,
+        url: f.type.startsWith("image/") ? URL.createObjectURL(f) : "",
+        isImage: f.type.startsWith("image/"),
+      }))
+    );
   }
 
   function onDrop(e: React.DragEvent) {
@@ -172,42 +182,140 @@ function FileDropzone({ field }: { field: FormField }) {
       const dt = new DataTransfer();
       Array.from(e.dataTransfer.files).forEach((f) => dt.items.add(f));
       inputRef.current.files = dt.files;
-    } catch { /* fallback: user clicks to re-select */ }
+    } catch { /* fallback */ }
     applyFiles(e.dataTransfer.files);
   }
 
+  const imagePreviews = previews.filter((p) => p.isImage);
+
+  function prevImg(e: React.MouseEvent) {
+    e.stopPropagation();
+    setLightbox((i) => (i !== null && i > 0 ? i - 1 : i));
+  }
+  function nextImg(e: React.MouseEvent) {
+    e.stopPropagation();
+    setLightbox((i) => (i !== null && i < imagePreviews.length - 1 ? i + 1 : i));
+  }
+
   return (
-    <div
-      onClick={() => inputRef.current?.click()}
-      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-      onDragLeave={() => setIsDragging(false)}
-      onDrop={onDrop}
-      className={[
-        "border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer select-none min-h-[120px] flex flex-col items-center justify-center",
-        isDragging
-          ? "border-violet-500 bg-violet-50"
-          : "border-gray-300 hover:border-violet-400 bg-slate-50 hover:bg-violet-50/40",
-      ].join(" ")}
-    >
-      <input
-        ref={inputRef}
-        id={field.id}
-        name={field.name}
-        type="file"
-        required={field.required}
-        accept="image/*"
-        multiple
-        className="sr-only"
-        onChange={(e) => applyFiles(e.target.files)}
-      />
-      <ImagePlus className="mb-2 text-slate-400" size={36} />
-      {names ? (
-        <p className="text-sm font-medium text-slate-700 break-all px-2">{names}</p>
-      ) : (
-        <>
-          <p className="text-sm font-medium text-slate-600">Kliknij lub przeciągnij zdjęcia tutaj</p>
-          <p className="mt-1 text-xs text-slate-400">Max 5MB</p>
-        </>
+    <div>
+      {/* Dropzone */}
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={onDrop}
+        className={[
+          "border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer select-none min-h-[120px] flex flex-col items-center justify-center",
+          isDragging
+            ? "border-violet-500 bg-violet-50"
+            : "border-gray-300 hover:border-violet-400 bg-slate-50 hover:bg-violet-50/40",
+        ].join(" ")}
+      >
+        <input
+          ref={inputRef}
+          id={field.id}
+          name={field.name}
+          type="file"
+          required={field.required && previews.length === 0}
+          accept="image/*"
+          multiple
+          className="sr-only"
+          onChange={(e) => applyFiles(e.target.files)}
+        />
+        <ImagePlus className="mb-2 text-slate-400" size={36} />
+        {previews.length > 0 ? (
+          <p className="text-sm font-medium text-slate-700">
+            {previews.length} {previews.length === 1 ? "plik wybrany" : previews.length < 5 ? "pliki wybrane" : "plików wybranych"} – kliknij, by zmienić
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-medium text-slate-600">Kliknij lub przeciągnij zdjęcia tutaj</p>
+            <p className="mt-1 text-xs text-slate-400">Max 5MB</p>
+          </>
+        )}
+      </div>
+
+      {/* Thumbnails */}
+      {previews.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {previews.map((p, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => p.isImage && setLightbox(imagePreviews.indexOf(p))}
+              className={`relative h-20 w-20 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 transition-all ${
+                p.isImage
+                  ? "cursor-zoom-in hover:border-violet-400 hover:scale-105"
+                  : "cursor-default"
+              }`}
+            >
+              {p.isImage ? (
+                <img src={p.url} alt={p.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-1 px-1">
+                  <FileIcon size={22} className="text-slate-400" />
+                  <span className="text-[10px] text-slate-500 text-center leading-tight break-all line-clamp-2">{p.name}</span>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightbox !== null && imagePreviews[lightbox] && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setLightbox(null)}
+        >
+          <div
+            className="relative flex flex-col items-center max-w-screen-lg w-full px-16"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={imagePreviews[lightbox].url}
+              alt={imagePreviews[lightbox].name}
+              className="max-h-[80vh] max-w-full rounded-xl object-contain shadow-2xl"
+            />
+            <p className="mt-3 text-sm text-white/60 truncate max-w-xs">
+              {imagePreviews[lightbox].name}
+            </p>
+            {imagePreviews.length > 1 && (
+              <p className="mt-1 text-xs text-white/40">
+                {lightbox + 1} / {imagePreviews.length}
+              </p>
+            )}
+          </div>
+
+          {/* Zamknij */}
+          <button
+            onClick={() => setLightbox(null)}
+            className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+          >
+            <X size={20} />
+          </button>
+
+          {/* Poprzednie */}
+          {lightbox > 0 && (
+            <button
+              onClick={prevImg}
+              className="absolute left-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            >
+              <ChevronLeft size={24} />
+            </button>
+          )}
+
+          {/* Następne */}
+          {lightbox < imagePreviews.length - 1 && (
+            <button
+              onClick={nextImg}
+              className="absolute right-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            >
+              <ChevronRight size={24} />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
