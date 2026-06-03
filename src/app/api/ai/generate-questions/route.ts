@@ -14,19 +14,20 @@ export async function POST(req: Request) {
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.plan_type === "free") {
-    return NextResponse.json({ error: "Funkcja dostępna tylko w planach Premium." }, { status: 403 });
-  }
+  const isFree = !profile || profile.plan_type === "free";
 
-  const { goal } = await req.json().catch(() => ({})) as { goal?: string };
+  const { goal, maxQuestions: rawMax } = await req.json().catch(() => ({})) as { goal?: string; maxQuestions?: number };
   if (!goal?.trim()) return NextResponse.json({ error: "Podaj cel formularza." }, { status: 400 });
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "Brak konfiguracji klucza AI (GEMINI_API_KEY)." }, { status: 500 });
 
+  const requested = Math.min(Math.max(Number(rawMax ?? 8), 3), 15);
+  const maxQ = isFree ? Math.min(requested, 10) : requested;
+
   const prompt = `Jesteś asystentem do budowania formularzy HTML. Użytkownik poda Ci cel formularza.
 
-Zwróć WYŁĄCZNIE tablicę JSON (bez żadnego dodatkowego tekstu, bez markdown, bez komentarzy) zawierającą od 6 do 10 sugerowanych pytań/pól formularza.
+Zwróć WYŁĄCZNIE tablicę JSON (bez żadnego dodatkowego tekstu, bez markdown, bez komentarzy) zawierającą dokładnie ${maxQ} sugerowanych pytań/pól formularza.
 
 Każdy element tablicy musi mieć DOKŁADNIE te klucze:
 - "label": string (opis pola, po polsku)
