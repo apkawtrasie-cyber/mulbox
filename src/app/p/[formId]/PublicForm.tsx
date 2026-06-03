@@ -79,7 +79,11 @@ export default function PublicForm({ formId, fields, submitLabel, siteKey, accen
       className="mt-8 rounded-2xl bg-white p-6 shadow-xl border border-slate-100"
     >
       <div className={wide ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "space-y-4"}>
-        {fields.map((f) => {
+        {[...fields].sort((a, b) =>
+          a.type === "checkbox" && b.type !== "checkbox" ? 1
+          : a.type !== "checkbox" && b.type === "checkbox" ? -1
+          : 0
+        ).map((f) => {
           const fullWidth = wide && (f.type === "textarea" || f.type === "file" || f.type === "checkbox");
 
           if (f.type === "checkbox") {
