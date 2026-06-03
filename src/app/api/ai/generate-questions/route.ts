@@ -45,7 +45,11 @@ Odpowiedź (tylko JSON array, nic więcej):`;
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 1024,
+          thinkingConfig: { thinkingBudget: 0 },
+        },
       }),
     },
   );
@@ -69,7 +73,13 @@ Odpowiedź (tylko JSON array, nic więcej):`;
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
 
-  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  // gemini-2.5-flash zwraca kilka parts: najpierw "thought" (rozumowanie), potem właściwa odpowiedź
+  const parts = (data.candidates?.[0]?.content?.parts ?? []) as Array<{ text?: string; thought?: boolean }>;
+  const raw = parts
+    .filter((p) => !p.thought)
+    .map((p) => p.text ?? "")
+    .join("")
+    .trim();
 
   let questions: unknown[];
   try {
