@@ -21,6 +21,7 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
   const [fields, setFields] = useState<FormField[]>(selectedForm?.config?.fields ?? []);
   const [name, setName] = useState(selectedForm?.name ?? "Nowy formularz");
   const [copied, setCopied] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [rightPanel, setRightPanel] = useState<"html" | "ai">("html");
@@ -65,6 +66,13 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
     await navigator.clipboard.writeText(html);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function copyUrl() {
+    const url = `${window.location.origin}/p/${selectedForm?.id}`;
+    await navigator.clipboard.writeText(url);
+    setCopiedUrl(true);
+    setTimeout(() => setCopiedUrl(false), 2000);
   }
 
   if (!selectedForm) {
@@ -126,6 +134,12 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
         <code className="flex-1 truncate text-xs font-mono text-slate-700">
           {typeof window !== "undefined" ? `${window.location.origin}/p/${selectedForm.id}` : `/p/${selectedForm.id}`}
         </code>
+        <button
+          onClick={copyUrl}
+          className="btn-secondary py-1.5 px-2.5 text-xs shrink-0"
+        >
+          {copiedUrl ? <><Check size={13} /> Skopiowano</> : <><Copy size={13} /> Kopiuj</>}
+        </button>
         <a
           href={`/p/${selectedForm.id}`}
           target="_blank"
