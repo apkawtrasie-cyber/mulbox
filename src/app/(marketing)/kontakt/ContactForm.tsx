@@ -20,11 +20,19 @@ interface Props {
  * Wysyła zgłoszenie do /api/f/{formId} (pełny pipeline Mulbox).
  * Wstaw w dowolnym miejscu: <ContactForm />
  */
+/** Wyciąga samo UUID z formId – obsługuje zarówno "uuid" jak i "https://…/p/uuid" */
+function resolveFormId(raw: string): string {
+  if (!raw) return "";
+  if (raw.includes("/")) return raw.split("/").filter(Boolean).pop() ?? raw;
+  return raw;
+}
+
 export function ContactForm({
-  formId = process.env.NEXT_PUBLIC_CONTACT_FORM_ID ?? "",
+  formId: rawFormId = process.env.NEXT_PUBLIC_CONTACT_FORM_ID ?? "",
   title = "Skontaktuj się z nami",
   description,
 }: Props) {
+  const formId = resolveFormId(rawFormId);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
