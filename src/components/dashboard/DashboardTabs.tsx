@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LayoutGrid, Wand2, Inbox as InboxIcon, Settings as SettingsIcon, FileText } from "lucide-react";
+import { LayoutGrid, Wand2, Inbox as InboxIcon, Settings as SettingsIcon, FileText, CreditCard } from "lucide-react";
 import type { FormRecord, Profile, SubmissionRecord } from "@/lib/types";
 import { FormsList } from "./modules/FormsList";
 import { FormBuilder } from "./modules/FormBuilder";
@@ -9,8 +9,9 @@ import { Inbox } from "./modules/Inbox";
 import { Settings } from "./modules/Settings";
 import { BriefBuilder } from "./modules/BriefBuilder";
 import { RedeemCode } from "./RedeemCode";
+import { Billing } from "./modules/Billing";
 
-type TabId = "forms" | "builder" | "brief" | "inbox" | "settings";
+type TabId = "forms" | "builder" | "brief" | "inbox" | "settings" | "billing";
 
 const TABS: { id: TabId; label: string; icon: typeof LayoutGrid }[] = [
   { id: "forms", label: "Formularze", icon: LayoutGrid },
@@ -18,6 +19,7 @@ const TABS: { id: TabId; label: string; icon: typeof LayoutGrid }[] = [
   { id: "brief", label: "Brief", icon: FileText },
   { id: "inbox", label: "Skrzynka", icon: InboxIcon },
   { id: "settings", label: "Ustawienia", icon: SettingsIcon },
+  { id: "billing", label: "Płatności", icon: CreditCard },
 ];
 
 interface Props {
@@ -95,6 +97,9 @@ export function DashboardTabs({ profile, forms, submissions }: Props) {
         )}
         {active === "settings" && (
           <Settings forms={forms} selectedForm={selectedForm} onSelectForm={setSelectedFormId} plan={profile.plan_type} />
+        )}
+        {active === "billing" && (
+          <Billing profile={profile} />
         )}
       </div>
     </div>

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Check, X } from "lucide-react";
 import type { Metadata } from "next";
+import { PricingCTA } from "@/components/marketing/PricingCTA";
 
 export const metadata: Metadata = {
   title: "Cennik",
@@ -14,6 +14,7 @@ interface Plan {
   description: string;
   highlight?: boolean;
   cta: string;
+  planKey: "free" | "personal" | "business";
   features: { label: string; included: boolean }[];
 }
 
@@ -24,6 +25,7 @@ const PLANS: Plan[] = [
     period: "/mies.",
     description: "Idealny start dla małych stron i osobistych projektów.",
     cta: "Zacznij za darmo",
+    planKey: "free" as const,
     features: [
       { label: "1 aktywny formularz", included: true },
       { label: "100 wiadomości / mies.", included: true },
@@ -42,6 +44,7 @@ const PLANS: Plan[] = [
     description: "Dla freelancerów i twórców rozwijających własną markę.",
     highlight: true,
     cta: "Wybierz Personal",
+    planKey: "personal" as const,
     features: [
       { label: "5 aktywnych formularzy", included: true },
       { label: "1 000 wiadomości / mies.", included: true },
@@ -59,6 +62,7 @@ const PLANS: Plan[] = [
     period: "/mies.",
     description: "Dla firm i agencji obsługujących wiele projektów.",
     cta: "Wybierz Business",
+    planKey: "business" as const,
     features: [
       { label: "Nielimitowane formularze", included: true },
       { label: "Nielimitowane wiadomości", included: true },
@@ -118,12 +122,11 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href="/register"
+              <PricingCTA
+                plan={plan.planKey}
+                label={plan.cta}
                 className={`mt-8 ${plan.highlight ? "btn-primary" : "btn-secondary"} w-full`}
-              >
-                {plan.cta}
-              </Link>
+              />
             </div>
           ))}
         </div>
