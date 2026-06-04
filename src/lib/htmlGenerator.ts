@@ -13,8 +13,12 @@ function inputForType(type: string): string {
 export function generateFormHTML(formId: string, config: FormConfig, plan: PlanType): string {
   const action = `${APP_URL}/api/f/${formId}`;
   const submitLabel = config.submit_label ?? "Wyślij wiadomość";
+  const fields = config.fields ?? [];
+  const hasFile = fields.some((f) => f.type === "file");
+  // multipart wymagany dla <input type="file">; dla pozostałych formów domyślne urlencoded.
+  const enctype = hasFile ? ` enctype="multipart/form-data"` : "";
 
-  const fieldsHTML = (config.fields ?? [])
+  const fieldsHTML = fields
     .map((f) => {
       const req = f.required ? " required" : "";
       const placeholder = f.placeholder ?? "";
@@ -36,7 +40,11 @@ export function generateFormHTML(formId: string, config: FormConfig, plan: PlanT
         return `  <div class="flex items-start gap-3">\n    <input type="checkbox" id="${escapeHtml(f.name)}" name="${escapeHtml(f.name)}"${req} class="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600" />\n    <label for="${escapeHtml(f.name)}" class="text-sm text-slate-700 cursor-pointer">${text}</label>\n  </div>`;
       }
 
-      return `  <div>\n    <label class="block text-sm font-medium text-slate-700 mb-1.5">${escapeHtml(f.label)}</label>\n    <input type="${f.type}" name="${escapeHtml(f.name)}" placeholder="${escapeHtml(placeholder)}"${req} ${cls} />\n  </div>`;
+      // type="file" / "date" nie używają placeholdera – pomiń atrybut.
+      const noPlaceholder = f.type === "file" || f.type === "date";
+      const placeholderAttr = noPlaceholder ? "" : ` placeholder="${escapeHtml(placeholder)}"`;
+      const acceptAttr = f.type === "file" ? ` accept="image/*,application/pdf"` : "";
+      return `  <div>\n    <label class="block text-sm font-medium text-slate-700 mb-1.5">${escapeHtml(f.label)}</label>\n    <input type="${f.type}" name="${escapeHtml(f.name)}"${placeholderAttr}${acceptAttr}${req} ${cls} />\n  </div>`;
     })
     .join("\n");
 
@@ -44,7 +52,7 @@ export function generateFormHTML(formId: string, config: FormConfig, plan: PlanT
     ? `\n  <p class="text-center text-xs text-slate-400">Powered by <a href="${APP_URL}" class="underline">Mulbox.ch</a></p>`
     : "";
 
-  return `<form action="${action}" method="POST" class="w-full max-w-md mx-auto space-y-4 rounded-2xl bg-white p-6 shadow">
+  return `<form action="${action}" method="POST"${enctype} class="w-full max-w-md mx-auto space-y-4 rounded-2xl bg-white p-6 shadow">
 ${fieldsHTML}
   <button type="submit" class="w-full rounded-xl bg-violet-600 hover:bg-violet-700 transition py-3 font-semibold text-white">${escapeHtml(submitLabel)}</button>${branding}
 </form>`;
