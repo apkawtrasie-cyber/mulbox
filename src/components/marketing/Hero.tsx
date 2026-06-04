@@ -66,30 +66,31 @@ export function Hero() {
           <div aria-hidden className="absolute inset-0 pointer-events-none hidden dark:block"
             style={{ background: "radial-gradient(ellipse 55% 60% at 52% 42%, rgba(255,255,255,0.28) 0%, rgba(220,160,255,0.45) 14%, rgba(139,92,246,0.3) 32%, rgba(109,40,217,0.12) 55%, transparent 72%)" }} />
 
-          {/* Light image */}
-          <Image
-            src="/tlo.handy.mulbox.png"
-            alt="Mulbox – formularz na telefonie"
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-contain dark:hidden"
-            priority
-          />
-          {/* Dark image */}
-          <Image
-            src="/tlo.handy.dark.mulbox.png"
-            alt="Mulbox – formularz na telefonie (dark)"
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-contain hidden dark:block"
-            priority
-          />
+          {/* Floating phone */}
+          <div className="absolute inset-0 animate-float">
+            <Image
+              src="/tlo.handy.mulbox.png"
+              alt="Mulbox – formularz na telefonie"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-contain dark:hidden"
+              priority
+            />
+            <Image
+              src="/tlo.handy.dark.mulbox.png"
+              alt="Mulbox – formularz na telefonie (dark)"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-contain hidden dark:block"
+              priority
+            />
+          </div>
 
-          {/* 4 feature cards */}
-          <HeroCard className="top-[18%] left-[2%]"  icon={<Palette size={18} />}   title="Dostosuj"   subtitle="Kolory, czcionki, układ i treści" />
-          <HeroCard className="top-[35%] right-[2%]" icon={<Mail size={18} />}      title="Zbieraj"    subtitle="wiadomości i leady" />
-          <HeroCard className="top-[57%] left-[2%]"  icon={<Link2 size={18} />}     title="Udostępnij" subtitle="link, kod QR lub osadzenie" />
-          <HeroCard className="top-[65%] right-[2%]" icon={<BarChart3 size={18} />} title="Zarządzaj"  subtitle="swoją listą kontaktów" />
+          {/* 4 feature cards – delikatny drift */}
+          <HeroCard className="top-[18%] left-[2%] animate-drift-l"   icon={<Palette size={18} />}   title="Dostosuj"   subtitle="Kolory, czcionki, układ i treści" />
+          <HeroCard className="top-[35%] right-[2%] animate-drift-r"  icon={<Mail size={18} />}      title="Zbieraj"    subtitle="wiadomości i leady" />
+          <HeroCard className="top-[57%] left-[2%] animate-drift-l2"  icon={<Link2 size={18} />}     title="Udostępnij" subtitle="link, kod QR lub osadzenie" />
+          <HeroCard className="top-[65%] right-[2%] animate-drift-r2" icon={<BarChart3 size={18} />} title="Zarządzaj"  subtitle="swoją listą kontaktów" />
         </div>
       </div>
     </section>
