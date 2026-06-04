@@ -14,14 +14,14 @@ interface Plan {
   description: string;
   highlight?: boolean;
   cta: string;
-  planKey: "free" | "personal" | "business" | "test";
+  planKey: "free" | "personal" | "business";
   features: { label: string; included: boolean }[];
 }
 
 const PLANS: Plan[] = [
   {
     name: "Free",
-    price: "$0",
+    price: "0 zł",
     period: "/mies.",
     description: "Idealny start dla małych stron i osobistych projektów.",
     cta: "Zacznij za darmo",
@@ -38,12 +38,12 @@ const PLANS: Plan[] = [
     ],
   },
   {
-    name: "Personal",
-    price: "9 CHF",
+    name: "Test – 1 zł",
+    price: "1 zł",
     period: "/mies.",
-    description: "Dla freelancerów i twórców rozwijających własną markę.",
+    description: "Oferta testowa – sprawdź pełną funkcjonalność za symboliczną złotówkę.",
     highlight: true,
-    cta: "Wybierz Personal",
+    cta: "Kup za 1 zł",
     planKey: "personal" as const,
     features: [
       { label: "5 aktywnych formularzy", included: true },
@@ -57,22 +57,8 @@ const PLANS: Plan[] = [
     ],
   },
   {
-    name: "Test 1 zł",
-    price: "1 zł",
-    period: "/mies.",
-    description: "Oferta testowa – sprawdź płatność na prawdziwych pieniądzach.",
-    cta: "Kup za 1 zł",
-    planKey: "test" as const,
-    features: [
-      { label: "Wszystko z planu Personal", included: true },
-      { label: "Tylko do testów płatności", included: true },
-      { label: "Subskrypcja miesięczna 1 zł", included: true },
-      { label: "Anulujesz w dowolnej chwili", included: true },
-    ],
-  },
-  {
     name: "Business",
-    price: "29 CHF",
+    price: "9,90 zł",
     period: "/mies.",
     description: "Dla firm i agencji obsługujących wiele projektów.",
     cta: "Wybierz Business",

@@ -15,7 +15,7 @@ interface PlanInfo {
 const PLANS: PlanInfo[] = [
   {
     name: "Personal",
-    price: "9 CHF/mies.",
+    price: "1 zł/mies.",
     priceKey: "personal",
     highlight: true,
     features: [
@@ -29,7 +29,7 @@ const PLANS: PlanInfo[] = [
   },
   {
     name: "Business",
-    price: "29 CHF/mies.",
+    price: "9,90 zł/mies.",
     priceKey: "business",
     features: [
       "Nielimitowane formularze",
