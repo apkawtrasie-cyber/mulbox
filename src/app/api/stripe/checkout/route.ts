@@ -30,18 +30,24 @@ export async function POST(req: NextRequest) {
   // Plan 'test' (1 zł) daje taki sam dostęp jak 'personal'
   const effectivePlan = body.plan === "test" ? "personal" : body.plan;
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    customer: profile?.stripe_customer_id ?? undefined,
-    customer_email: profile?.stripe_customer_id ? undefined : (user.email ?? undefined),
-    line_items: [{ price: priceId, quantity: 1 }],
-    subscription_data: {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: profile?.stripe_customer_id ?? undefined,
+      customer_email: profile?.stripe_customer_id ? undefined : (user.email ?? undefined),
+      line_items: [{ price: priceId, quantity: 1 }],
+      subscription_data: {
+        metadata: { supabase_user_id: user.id, plan: effectivePlan },
+      },
       metadata: { supabase_user_id: user.id, plan: effectivePlan },
-    },
-    metadata: { supabase_user_id: user.id, plan: effectivePlan },
-    success_url: `${baseUrl}/dashboard?payment=success`,
-    cancel_url: `${baseUrl}/pricing?payment=cancelled`,
-  });
+      success_url: `${baseUrl}/dashboard?payment=success`,
+      cancel_url: `${baseUrl}/pricing?payment=cancelled`,
+    });
 
-  return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Stripe error";
+    console.error("[stripe/checkout]", msg);
+    return NextResponse.json({ error: `Stripe: ${msg}` }, { status: 500 });
+  }
 }
