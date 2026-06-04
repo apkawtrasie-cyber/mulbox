@@ -8,7 +8,8 @@ export const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2026-05-27.dahlia" })
   : null;
 
-export const PRICE_IDS: Record<"personal" | "business", string | undefined> = {
+export const PRICE_IDS: Record<"personal" | "business" | "test", string | undefined> = {
   personal: process.env.STRIPE_PRICE_PERSONAL,
   business: process.env.STRIPE_PRICE_BUSINESS,
+  test: process.env.STRIPE_PRICE_TEST,
 };

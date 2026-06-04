@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { createBrowserSupabase } from "@/lib/supabase";
 
 interface Props {
-  plan: "free" | "personal" | "business";
+  plan: "free" | "personal" | "business" | "test";
   label: string;
   className?: string;
 }

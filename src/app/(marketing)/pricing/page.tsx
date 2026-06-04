@@ -14,7 +14,7 @@ interface Plan {
   description: string;
   highlight?: boolean;
   cta: string;
-  planKey: "free" | "personal" | "business";
+  planKey: "free" | "personal" | "business" | "test";
   features: { label: string; included: boolean }[];
 }
 
@@ -54,6 +54,20 @@ const PLANS: Plan[] = [
       { label: "Własne reCAPTCHA (Site/Secret)", included: true },
       { label: "Eksport do CSV (UTF-8)", included: true },
       { label: "Dynamiczne strony /p/[id]", included: true },
+    ],
+  },
+  {
+    name: "Test 1 zł",
+    price: "1 zł",
+    period: "/mies.",
+    description: "Oferta testowa – sprawdź płatność na prawdziwych pieniądzach.",
+    cta: "Kup za 1 zł",
+    planKey: "test" as const,
+    features: [
+      { label: "Wszystko z planu Personal", included: true },
+      { label: "Tylko do testów płatności", included: true },
+      { label: "Subskrypcja miesięczna 1 zł", included: true },
+      { label: "Anulujesz w dowolnej chwili", included: true },
     ],
   },
   {
