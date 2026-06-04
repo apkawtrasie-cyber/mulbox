@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendEmail, renderDefaultNotification } from "@/lib/email";
 
-const TARGET_EMAIL = process.env.RESEND_FROM_EMAIL ?? "kontakt@mulbox.ch";
+const TARGET_EMAIL = process.env.MULBOX_ADMIN_EMAIL ?? "info@mulbox.ch";
 
 /** Endpoint demonstracyjny dla formularza /kontakt na stronie publicznej. */
 export async function POST(req: Request) {

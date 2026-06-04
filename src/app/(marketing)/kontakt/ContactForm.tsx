@@ -7,8 +7,6 @@ import { Send, CheckCircle2, AlertCircle } from "lucide-react";
 type Status = "idle" | "loading" | "success" | "error";
 
 interface Props {
-  /** ID formularza Mulbox – domyślnie z env NEXT_PUBLIC_CONTACT_FORM_ID */
-  formId?: string;
   /** Tytuł nad formularzem */
   title?: string;
   /** Krótki opis pod tytułem */
@@ -16,23 +14,14 @@ interface Props {
 }
 
 /**
- * Samowystarczalny formularz kontaktowy – karta z tytułem, polami i przyciskiem.
- * Wysyła zgłoszenie do /api/f/{formId} (pełny pipeline Mulbox).
+ * Formularz kontaktowy strony marketingowej.
+ * Zawsze wysyła na systemowy adres właściciela portalu (/api/contact → MULBOX_ADMIN_EMAIL).
  * Wstaw w dowolnym miejscu: <ContactForm />
  */
-/** Wyciąga samo UUID z formId – obsługuje zarówno "uuid" jak i "https://…/p/uuid" */
-function resolveFormId(raw: string): string {
-  if (!raw) return "";
-  if (raw.includes("/")) return raw.split("/").filter(Boolean).pop() ?? raw;
-  return raw;
-}
-
 export function ContactForm({
-  formId: rawFormId = process.env.NEXT_PUBLIC_CONTACT_FORM_ID ?? "",
   title = "Skontaktuj się z nami",
   description,
 }: Props) {
-  const formId = resolveFormId(rawFormId);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
@@ -41,12 +30,11 @@ export function ContactForm({
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!formId) { setError("Brak konfiguracji formularza."); return; }
     setStatus("loading");
     setError(null);
 
     if (hasCaptcha && !recaptchaRef.current?.getValue()) {
-      setError("Zaznacz checkbox \'Nie jestem robotem\'.");
+      setError("Zaznacz checkbox 'Nie jestem robotem'.");
       setStatus("idle");
       return;
     }
@@ -60,7 +48,7 @@ export function ContactForm({
     }
 
     try {
-      const res = await fetch(`/api/f/${formId}`, {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify(payload),
