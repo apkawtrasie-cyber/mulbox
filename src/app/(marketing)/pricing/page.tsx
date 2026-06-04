@@ -38,12 +38,12 @@ const PLANS: Plan[] = [
     ],
   },
   {
-    name: "Test – 1 zł",
-    price: "1 zł",
+    name: "Test – 2 zł",
+    price: "2 zł",
     period: "/mies.",
-    description: "Oferta testowa – sprawdź pełną funkcjonalność za symboliczną złotówkę.",
+    description: "Oferta testowa – sprawdź pełną funkcjonalność za symboliczne 2 złote.",
     highlight: true,
-    cta: "Kup za 1 zł",
+    cta: "Kup za 2 zł",
     planKey: "personal" as const,
     features: [
       { label: "5 aktywnych formularzy", included: true },
