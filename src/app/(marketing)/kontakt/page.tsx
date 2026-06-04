@@ -23,22 +23,8 @@ export default function ContactPage() {
             <li className="flex items-center gap-3"><Clock className="text-brand-600" size={20} /> Pn–Pt, 9:00–17:00 CET</li>
           </ul>
         </div>
-        <div className="card">
-          <ContactForm />
-        </div>
+        <ContactForm />
       </div>
-
-      {/* TEST EMBED – do usunięcia po weryfikacji */}
-      {process.env.NEXT_PUBLIC_CONTACT_FORM_ID && (
-        <iframe
-          src={`${process.env.NEXT_PUBLIC_APP_URL}/p/${process.env.NEXT_PUBLIC_CONTACT_FORM_ID}`}
-          width="100%"
-          height="1600"
-          style={{ border: 0, display: "block" }}
-          loading="lazy"
-          title="Formularz kontaktowy"
-        />
-      )}
     </section>
   );
 }
