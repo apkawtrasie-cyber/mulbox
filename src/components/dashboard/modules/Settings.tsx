@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Lock, Globe, Mail } from "lucide-react";
+import { Save, Lock, Globe, Mail, CheckCircle2, AlertCircle } from "lucide-react";
 import type { FormRecord, PlanType } from "@/lib/types";
 
 interface Props {
@@ -38,6 +38,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
   const autoBodyRef = useRef<HTMLTextAreaElement>(null);
   const customTplRef = useRef<HTMLTextAreaElement>(null);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
 
   useEffect(() => {
     if (!selectedForm) return;
@@ -60,7 +61,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
       formpage_footer: selectedForm.config?.formpage_footer ?? "",
       formpage_wide: selectedForm.config?.formpage_wide ?? false,
     });
-  }, [selectedForm?.id]);
+  }, [selectedForm]);
 
   if (!selectedForm) {
     return <div className="card text-center py-12 text-slate-500">Wybierz formularz, aby zobaczyć ustawienia.</div>;
@@ -69,6 +70,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
   async function save() {
     if (!selectedForm) return;
     setSaving(true);
+    setToast(null);
     try {
       const payload: Record<string, unknown> = {
         notification_email: state.notification_email || null,
@@ -92,12 +94,21 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
           formpage_wide: isPremium && state.formpage_wide,
         },
       };
-      await fetch(`/api/forms/${selectedForm.id}`, {
+      const res = await fetch(`/api/forms/${selectedForm.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { error?: string };
+        setToast({ type: "err", msg: err.error ?? `Błąd serwera (${res.status})` });
+        return;
+      }
+      setToast({ type: "ok", msg: "Ustawienia zapisane!" });
+      setTimeout(() => setToast(null), 3000);
       router.refresh();
+    } catch (e) {
+      setToast({ type: "err", msg: e instanceof Error ? e.message : "Błąd połączenia" });
     } finally { setSaving(false); }
   }
 
@@ -129,9 +140,19 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
           <select value={selectedForm.id} onChange={(e) => onSelectForm(e.target.value)} className="input max-w-xs">
             {forms.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
-          <button onClick={save} disabled={saving} className="btn-primary disabled:opacity-60">
-            <Save size={16} /> {saving ? "Zapisuję…" : "Zapisz"}
-          </button>
+          <div className="flex items-center gap-2">
+            {toast && (
+              <span className={`flex items-center gap-1.5 text-sm font-medium ${
+                toast.type === "ok" ? "text-emerald-600" : "text-rose-600"
+              }`}>
+                {toast.type === "ok" ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
+                {toast.msg}
+              </span>
+            )}
+            <button onClick={save} disabled={saving} className="btn-primary disabled:opacity-60">
+              <Save size={16} /> {saving ? "Zapisuję…" : "Zapisz"}
+            </button>
+          </div>
         </div>
       </header>
 

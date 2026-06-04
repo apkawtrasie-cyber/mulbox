@@ -29,19 +29,21 @@ export default function ContactPage() {
       </div>
 
       {/* TEST EMBED – do usunięcia po weryfikacji */}
-      <div className="container-fluid max-w-2xl mt-16">
-        <h2 className="text-xl font-semibold text-slate-900 mb-6 text-center">Brief / Zapytanie ofertowe</h2>
-        <div className="rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-          <iframe
-            src="https://mulbox.ch/p/a2d13660-c4a5-4bed-b0ca-53db49621281"
-            width="100%"
-            height="1600"
-            style={{ border: 0, display: "block" }}
-            loading="lazy"
-            title="Formularz Brief Mulbox"
-          />
+      {process.env.NEXT_PUBLIC_CONTACT_FORM_ID && (
+        <div className="container-fluid max-w-2xl mt-16">
+          <h2 className="text-xl font-semibold text-slate-900 mb-6 text-center">Brief / Zapytanie ofertowe</h2>
+          <div className="rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+            <iframe
+              src={`${process.env.NEXT_PUBLIC_APP_URL}/p/${process.env.NEXT_PUBLIC_CONTACT_FORM_ID}`}
+              width="100%"
+              height="1600"
+              style={{ border: 0, display: "block" }}
+              loading="lazy"
+              title="Formularz Brief Mulbox"
+            />
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }
