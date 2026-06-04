@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function ContactFormPage() {
   return (
     <section className="section">
-      <div className="container-fluid max-w-xl">
+      <div className="container-fluid">
         <ContactForm />
       </div>
     </section>

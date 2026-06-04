@@ -71,7 +71,7 @@ export function ContactForm({
   }
 
   return (
-    <div className="w-full rounded-2xl bg-white border border-slate-100 shadow-sm p-6 sm:p-8">
+    <div className="w-full max-w-lg mx-auto rounded-2xl bg-white border border-slate-100 shadow-sm p-6 sm:p-8">
       {status === "success" ? (
         <div className="flex flex-col items-center text-center py-8">
           <CheckCircle2 className="text-emerald-500" size={44} />
