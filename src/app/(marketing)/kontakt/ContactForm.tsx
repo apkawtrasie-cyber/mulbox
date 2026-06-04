@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { Send, CheckCircle2, AlertCircle } from "lucide-react";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -26,6 +27,9 @@ export function ContactForm({
 }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
+  const hasCaptcha = siteKey.length > 0;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,8 +37,19 @@ export function ContactForm({
     setStatus("loading");
     setError(null);
 
+    if (hasCaptcha && !recaptchaRef.current?.getValue()) {
+      setError("Zaznacz checkbox \'Nie jestem robotem\'.");
+      setStatus("idle");
+      return;
+    }
+
     const fd = new FormData(e.currentTarget);
-    const payload = Object.fromEntries(fd.entries());
+    const payload: Record<string, string> = Object.fromEntries(
+      Array.from(fd.entries()).filter(([, v]) => typeof v === "string") as [string, string][]
+    );
+    if (hasCaptcha) {
+      payload["recaptchaToken"] = recaptchaRef.current!.getValue()!;
+    }
 
     try {
       const res = await fetch(`/api/f/${formId}`, {
@@ -48,6 +63,7 @@ export function ContactForm({
       }
       setStatus("success");
       (e.target as HTMLFormElement).reset();
+      recaptchaRef.current?.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Błąd sieci.");
       setStatus("error");
@@ -80,6 +96,9 @@ export function ContactForm({
             <label className="label" htmlFor="cf-message">Wiadomość</label>
             <textarea id="cf-message" name="message" required rows={5} className="input resize-none" placeholder="W czym możemy pomóc?" />
           </div>
+          {hasCaptcha && (
+            <ReCAPTCHA ref={recaptchaRef} sitekey={siteKey} />
+          )}
           {error && (
             <p className="flex items-center gap-2 text-sm text-rose-600"><AlertCircle size={16} /> {error}</p>
           )}
