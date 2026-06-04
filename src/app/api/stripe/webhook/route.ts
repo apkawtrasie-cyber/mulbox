@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { createServiceSupabase } from "@/lib/supabase-server";
+import { sendEmail } from "@/lib/email";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
+const ADMIN_EMAIL = process.env.MULBOX_ADMIN_EMAIL ?? "info@mulbox.ch";
 
 export async function POST(req: NextRequest) {
   if (!stripe) {
@@ -42,6 +44,11 @@ export async function POST(req: NextRequest) {
       }).eq("id", userId);
 
       console.log(`[stripe/webhook] checkout.session.completed: user=${userId} plan=${plan}`);
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: `✅ Nowa subskrypcja Mulbox – plan ${plan}`,
+        html: `<p>Użytkownik <strong>${userId}</strong> wykupił plan <strong>${plan}</strong>.</p><p>Stripe customer: ${customerId ?? "brak"}</p>`,
+      }).catch((e) => console.warn("[stripe mail]", e));
       break;
     }
 
@@ -66,6 +73,11 @@ export async function POST(req: NextRequest) {
       if (!userId) break;
       await admin.from("profiles").update({ plan_type: "free", plan_expires_at: null }).eq("id", userId);
       console.log(`[stripe/webhook] subscription.deleted: user=${userId} → free`);
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: `❌ Anulowana subskrypcja Mulbox`,
+        html: `<p>Użytkownik <strong>${userId}</strong> anulował subskrypcję. Plan zmieniony na <strong>free</strong>.</p>`,
+      }).catch((e) => console.warn("[stripe mail]", e));
       break;
     }
 
@@ -75,6 +87,11 @@ export async function POST(req: NextRequest) {
       if (customerId) {
         await admin.from("profiles").update({ plan_type: "free", plan_expires_at: null }).eq("stripe_customer_id", customerId);
         console.log(`[stripe/webhook] invoice.payment_failed: customer=${customerId} → free`);
+        await sendEmail({
+          to: ADMIN_EMAIL,
+          subject: `⚠️ Płatność nieudana – Mulbox`,
+          html: `<p>Nieudana płatność dla klienta Stripe: <strong>${customerId}</strong>. Plan zmieniony na <strong>free</strong>.</p>`,
+        }).catch((e) => console.warn("[stripe mail]", e));
       }
       break;
     }
