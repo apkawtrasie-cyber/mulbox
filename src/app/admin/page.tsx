@@ -5,6 +5,7 @@ import { createServerSupabase, isSupabaseConfigured } from "@/lib/supabase-serve
 import { SetupRequired } from "@/components/SetupRequired";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { PromoCodeManager } from "@/components/admin/PromoCodeManager";
+import { SubscriptionsList } from "@/components/admin/SubscriptionsList";
 import type { Profile, FormRecord } from "@/lib/types";
 
 export const revalidate = 0;
@@ -58,6 +59,8 @@ export default async function AdminPage() {
           <Stat label="Wszystkie wiadomości" value={stats.submissions} />
           <Stat label="Plany (Free / Personal / Business)" value={`${stats.free} / ${stats.personal} / ${stats.business}`} />
         </section>
+
+        <SubscriptionsList profiles={profilesArr} />
 
         <AdminTable forms={formsArr} profiles={profilesArr} />
 

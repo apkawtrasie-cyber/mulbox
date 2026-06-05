@@ -14,6 +14,7 @@ export interface Profile {
   plan_expires_at: string | null;
   role: UserRole;
   created_at: string;
+  stripe_customer_id?: string | null;
 }
 
 /** Pojedynczy "klocek" w wizualnym kreatorze. */

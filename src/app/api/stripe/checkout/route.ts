@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("stripe_customer_id, email")
+    .select("stripe_customer_id, email, plan_type")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -29,6 +29,14 @@ export async function POST(req: NextRequest) {
 
   // Plan 'test' (1 zł) daje taki sam dostęp jak 'personal'
   const effectivePlan = body.plan === "test" ? "personal" : body.plan;
+
+  // Blokada – ten sam plan już aktywny
+  if (profile?.plan_type === effectivePlan) {
+    return NextResponse.json(
+      { error: `Masz już aktywny plan ${effectivePlan === "personal" ? "Personal" : "Business"}. Aby zmienić lub anulować subskrypcję, użyj przycisku "Zarządzaj subskrypcją" w panelu Płatności.` },
+      { status: 409 }
+    );
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
