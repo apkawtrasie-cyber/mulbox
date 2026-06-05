@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { FileText, ClipboardList, Plus, ExternalLink, Pencil, LayoutTemplate } from "lucide-react";
 import type { FormRecord, PlanType } from "@/lib/types";
 
@@ -48,6 +49,7 @@ const TEMPLATES: Template[] = [
 ];
 
 export function BriefBuilder({ briefForms, onEditForm }: Props) {
+  const t = useTranslations("Dashboard");
   const router = useRouter();
   const [creating, setCreating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -66,10 +68,10 @@ export function BriefBuilder({ briefForms, onEditForm }: Props) {
         router.refresh();
         if (form?.id) onEditForm(form.id);
       } else {
-        setError("Nie udało się utworzyć formularza. Spróbuj ponownie.");
+        setError(t("briefErrorCreate"));
       }
     } catch {
-      setError("Błąd połączenia. Sprawdź internet i spróbuj ponownie.");
+      setError(t("briefErrorNetwork"));
     } finally {
       setCreating(null);
     }
@@ -78,16 +80,13 @@ export function BriefBuilder({ briefForms, onEditForm }: Props) {
   return (
     <section className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">Brief / Ankieta</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Pełnoekranowe formularze do zbierania briefów i wycen. Automatycznie ustawiają szeroki,
-          dwukolumnowy układ na stronie <code className="font-mono">/p/[id]</code>.
-        </p>
+        <h1 className="text-2xl font-bold text-slate-900">{t("briefTitle")}</h1>
+        <p className="text-sm text-slate-500 mt-1">{t("briefSubtitle")}</p>
       </header>
 
       {briefForms.length > 0 && (
         <div className="card">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Twoje brief-formularze</h2>
+          <h2 className="text-sm font-semibold text-slate-700 mb-3">{t("yourBriefs")}</h2>
           <ul className="space-y-2">
             {briefForms.map((f) => (
               <li
@@ -105,13 +104,13 @@ export function BriefBuilder({ briefForms, onEditForm }: Props) {
                     rel="noopener noreferrer"
                     className="btn-secondary text-xs py-1.5 px-2.5"
                   >
-                    <ExternalLink size={13} /> Otwórz
+                    <ExternalLink size={13} /> {t("open")}
                   </a>
                   <button
                     onClick={() => onEditForm(f.id)}
                     className="btn-primary text-xs py-1.5 px-2.5"
                   >
-                    <Pencil size={13} /> Edytuj
+                    <Pencil size={13} /> {t("edit")}
                   </button>
                 </div>
               </li>
@@ -121,7 +120,7 @@ export function BriefBuilder({ briefForms, onEditForm }: Props) {
       )}
 
       <div>
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">Utwórz nowy z szablonu</h2>
+        <h2 className="text-sm font-semibold text-slate-700 mb-3">{t("createFromTemplate")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {TEMPLATES.map((tpl) => {
             const Icon = tpl.icon;
@@ -139,7 +138,7 @@ export function BriefBuilder({ briefForms, onEditForm }: Props) {
                   <div>
                     <h3 className="font-semibold text-slate-900 leading-tight">{tpl.label}</h3>
                     {tpl.isDefault && (
-                      <span className="inline-block mt-0.5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-semibold px-2 py-0.5">domyślny</span>
+                      <span className="inline-block mt-0.5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-semibold px-2 py-0.5">{t("defaultBadge")}</span>
                     )}
                   </div>
                 </div>
@@ -163,8 +162,8 @@ export function BriefBuilder({ briefForms, onEditForm }: Props) {
                   className="btn-primary mt-auto disabled:opacity-60"
                 >
                   {creating === tpl.id
-                    ? "Tworzę formularz…"
-                    : <><Plus size={15} /> Utwórz z szablonu</>}
+                    ? t("creatingForm")
+                    : <><Plus size={15} /> {t("createFromTemplateBtn")}</>}
                 </button>
               </div>
             );
@@ -179,9 +178,7 @@ export function BriefBuilder({ briefForms, onEditForm }: Props) {
       </div>
 
       <div className="rounded-xl border border-violet-200 bg-violet-50 p-4 text-sm text-violet-800">
-        <strong>Jak to działa?</strong> Po kliknięciu „Utwórz z szablonu" formularz zostanie
-        automatycznie skonfigurowany z szerokim layoutem (2 kolumny na desktopie) i gotowymi polami.
-        Możesz go dowolnie edytować w zakładce <strong>Kreator</strong>.
+        <strong>{t("howItWorks")}</strong> {t("howItWorksText")}
       </div>
     </section>
   );

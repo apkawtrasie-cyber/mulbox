@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/routing";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { LogIn, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,7 @@ export default function LoginPage() {
       if (err) throw err;
       router.replace("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nie udało się zalogować.");
+      setError(err instanceof Error ? err.message : t("loginError"));
     } finally {
       setLoading(false);
     }
@@ -33,15 +34,15 @@ export default function LoginPage() {
 
   return (
     <div className="card">
-      <h1 className="text-2xl font-bold text-slate-900">Zaloguj się</h1>
-      <p className="mt-1 text-sm text-slate-500">Witaj z powrotem w Mulbox.</p>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("loginH1")}</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("loginSubtitle")}</p>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <div>
-          <label htmlFor="email" className="label">Email</label>
+          <label htmlFor="email" className="label">{t("labelEmail")}</label>
           <input id="email" name="email" type="email" required autoComplete="email" className="input" />
         </div>
         <div>
-          <label htmlFor="password" className="label">Hasło</label>
+          <label htmlFor="password" className="label">{t("labelPassword")}</label>
           <input id="password" name="password" type="password" required autoComplete="current-password" className="input" />
         </div>
         {error && (
@@ -50,12 +51,14 @@ export default function LoginPage() {
           </p>
         )}
         <button disabled={loading} className="btn-primary w-full disabled:opacity-60">
-          <LogIn size={16} /> {loading ? "Logowanie…" : "Zaloguj się"}
+          <LogIn size={16} /> {loading ? t("loginSubmitting") : t("loginSubmit")}
         </button>
       </form>
-      <p className="mt-6 text-center text-sm text-slate-600">
-        Nie masz konta?{" "}
-        <Link href="/register" className="font-semibold text-brand-700 hover:underline">Załóż konto</Link>
+      <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
+        {t("noAccount")}{" "}
+        <Link href="/register" className="font-semibold text-brand-700 dark:text-brand-400 hover:underline">
+          {t("registerLink")}
+        </Link>
       </p>
     </div>
   );

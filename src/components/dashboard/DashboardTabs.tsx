@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { LayoutGrid, Wand2, Inbox as InboxIcon, Settings as SettingsIcon, FileText, CreditCard } from "lucide-react";
 import type { FormRecord, Profile, SubmissionRecord } from "@/lib/types";
 import { FormsList } from "./modules/FormsList";
@@ -13,14 +14,6 @@ import { Billing } from "./modules/Billing";
 
 type TabId = "forms" | "builder" | "brief" | "inbox" | "settings" | "billing";
 
-const TABS: { id: TabId; label: string; icon: typeof LayoutGrid }[] = [
-  { id: "forms", label: "Formularze", icon: LayoutGrid },
-  { id: "builder", label: "Kreator", icon: Wand2 },
-  { id: "brief", label: "Brief", icon: FileText },
-  { id: "inbox", label: "Skrzynka", icon: InboxIcon },
-  { id: "settings", label: "Ustawienia", icon: SettingsIcon },
-  { id: "billing", label: "Płatności", icon: CreditCard },
-];
 
 interface Props {
   profile: Profile;
@@ -29,6 +22,15 @@ interface Props {
 }
 
 export function DashboardTabs({ profile, forms, submissions }: Props) {
+  const t = useTranslations("Dashboard");
+  const TABS: { id: TabId; label: string; icon: typeof LayoutGrid }[] = [
+    { id: "forms", label: t("tabForms"), icon: LayoutGrid },
+    { id: "builder", label: t("tabBuilder"), icon: Wand2 },
+    { id: "brief", label: t("tabBrief"), icon: FileText },
+    { id: "inbox", label: t("tabInbox"), icon: InboxIcon },
+    { id: "settings", label: t("tabSettings"), icon: SettingsIcon },
+    { id: "billing", label: t("tabBilling"), icon: CreditCard },
+  ];
   const [active, setActive] = useState<TabId>("forms");
   const [selectedFormId, setSelectedFormId] = useState<string | null>(forms[0]?.id ?? null);
   const selectedForm = forms.find((f) => f.id === selectedFormId) ?? null;
@@ -45,26 +47,26 @@ export function DashboardTabs({ profile, forms, submissions }: Props) {
     <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
       {/* Sidebar */}
       <aside className="card lg:sticky lg:top-24 self-start">
-        <p className="text-sm sm:text-xs uppercase tracking-wide text-slate-500">Witaj,</p>
+        <p className="text-xs uppercase tracking-wide text-slate-500">{t("welcome")}</p>
         <p className="text-xl sm:text-lg font-semibold text-slate-900 truncate">{profile.full_name || profile.email}</p>
         {profile.plan_expires_at && (
           <p className="mt-1 text-xs text-amber-600">
-            Plan wygasa: {new Date(profile.plan_expires_at).toLocaleDateString("pl-PL")}
+            {t("planExpires")} {new Date(profile.plan_expires_at).toLocaleDateString()}
           </p>
         )}
         <nav className="mt-5 grid grid-cols-3 sm:grid-cols-5 lg:flex lg:flex-col gap-2 lg:gap-1">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const isActive = active === t.id;
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = active === tab.id;
             return (
               <button
-                key={t.id}
-                onClick={() => setActive(t.id)}
-                className={`flex flex-col sm:flex-row lg:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2 rounded-xl px-2 py-3 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium transition ${
+                key={tab.id}
+                onClick={() => setActive(tab.id)}
+                className={`flex flex-col sm:flex-row lg:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2 rounded-xl px-2 py-3 sm:px-3 sm:py-2 text-sm font-medium transition ${
                   isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <Icon size={18} /><span>{t.label}</span>
+                <Icon size={18} /><span>{tab.label}</span>
               </button>
             );
           })}

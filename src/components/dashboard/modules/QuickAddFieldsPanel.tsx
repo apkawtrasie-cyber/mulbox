@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Plus, ChevronDown, ChevronRight,
   User, Briefcase, Paperclip, Building2, Star, ShieldCheck,
@@ -100,7 +101,16 @@ interface Props {
 }
 
 export function QuickAddFieldsPanel({ onAddField }: Props) {
+  const t = useTranslations("Dashboard");
   const [open, setOpen] = useState<Set<string>>(new Set(["contact"]));
+  const catLabels: Record<string, string> = {
+    contact: t("quickCatContact"),
+    brief: t("quickCatBrief"),
+    media: t("quickCatMedia"),
+    business: t("quickCatBusiness"),
+    survey: t("quickCatSurvey"),
+    legal: t("quickCatLegal"),
+  };
 
   function toggle(id: string) {
     setOpen((prev) => {
@@ -111,9 +121,9 @@ export function QuickAddFieldsPanel({ onAddField }: Props) {
   }
 
   return (
-    <aside className="flex flex-col gap-0.5 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm lg:overflow-y-auto lg:max-h-[calc(100vh-200px)] lg:sticky lg:top-4">
-      <p className="px-2 pb-1.5 pt-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-        Szybkie klocki
+    <aside className="flex flex-col gap-0.5 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm">
+      <p className="px-2 pb-1.5 pt-0.5 text-xs font-semibold uppercase tracking-widest text-slate-400">
+        {t("quickPanelTitle")}
       </p>
 
       {CATEGORIES.map((cat) => {
@@ -128,13 +138,13 @@ export function QuickAddFieldsPanel({ onAddField }: Props) {
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${cat.colorClass}`}>
-                  <CatIcon size={12} />
+                  <CatIcon size={14} />
                 </span>
-                <span className="truncate text-xs font-semibold text-slate-700">{cat.label}</span>
+                <span className="truncate text-sm font-semibold text-slate-700">{catLabels[cat.id] ?? cat.label}</span>
               </div>
               {isOpen
-                ? <ChevronDown size={12} className="shrink-0 text-slate-400" />
-                : <ChevronRight size={12} className="shrink-0 text-slate-400" />}
+                ? <ChevronDown size={15} className="shrink-0 text-slate-400" />
+                : <ChevronRight size={15} className="shrink-0 text-slate-400" />}
             </button>
 
             {isOpen && (
@@ -149,12 +159,12 @@ export function QuickAddFieldsPanel({ onAddField }: Props) {
                       onClick={() => onAddField(f)}
                       className="group flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-slate-50"
                     >
-                      <FIcon size={11} className="shrink-0 text-slate-400" />
-                      <span className="flex-1 truncate text-xs text-slate-600 group-hover:text-slate-900">
+                      <FIcon size={13} className="shrink-0 text-slate-400" />
+                      <span className="flex-1 truncate text-sm text-slate-600 group-hover:text-slate-900">
                         {f.label}
                       </span>
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-400 transition-colors group-hover:bg-violet-100 group-hover:text-violet-700">
-                        <Plus size={9} />
+                        <Plus size={12} />
                       </span>
                     </button>
                   );

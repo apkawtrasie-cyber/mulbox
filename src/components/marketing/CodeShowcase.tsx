@@ -1,29 +1,24 @@
 import { Code2, QrCode, Link as LinkIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const SNIPPET = `<form action="https://mulbox.ch/api/f/abc123" method="POST">
-  <input name="name" placeholder="Imię i nazwisko" />
+  <input name="name" placeholder="Name" />
   <input name="email" type="email" placeholder="Email" />
-  <button type="submit">Wyślij wiadomość</button>
+  <button type="submit">Send message</button>
 </form>`;
 
-/**
- * Sekcja "Elastyczne udostępnianie" – układ szachownicowy 3 kontenerów:
- * 1) Snippet HTML (szeroki, lewo)
- * 2) Kod QR (wąski, prawo)
- * 3) Link / Landing (szeroki, lewo)
- */
 export function CodeShowcase() {
+  const t = useTranslations("Share");
   return (
     <section id="przyklady" className="py-24 sm:py-32 bg-[#090d16] text-white" aria-labelledby="share-heading">
       <div className="container-fluid max-w-6xl">
-        {/* Nagłówek */}
         <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-24">
           <h2 id="share-heading" className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-            Elastyczne udostępnianie. <br />
-            <span className="text-purple-400">Ty wybierasz, jak zbierasz leady.</span>
+            {t("h2Line1")} <br />
+            <span className="text-purple-400">{t("h2Line2")}</span>
           </h2>
           <p className="text-lg text-gray-400 leading-relaxed">
-            Niezależnie od tego, czy masz zaawansowaną stronę, prostego bloga, czy biznes lokalny – Mulbox dopasuje się do Twojego stylu.
+            {t("description")}
           </p>
         </div>
 
@@ -49,9 +44,9 @@ export function CodeShowcase() {
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold mb-3">Jeden czysty snippet HTML</h3>
+              <h3 className="text-2xl font-bold mb-3">{t("card1Title")}</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Masz stronę na WordPressie, Elementorze, Webflow czy Next.js? Wklejasz ten krótki kod bezpośrednio w strukturę swojej witryny. Formularz natychmiast działa bez instalowania ciężkich, dziurawych wtyczek, które zapychają bazę i blokują wysyłkę maili.
+                {t("card1Text")}
               </p>
             </div>
           </article>
@@ -80,9 +75,9 @@ export function CodeShowcase() {
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold mb-3">Kod QR dla biznesu lokalnego</h3>
+              <h3 className="text-2xl font-bold mb-3">{t("card2Title")}</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Idealne rozwiązanie do fizycznego świata. Pobierz automatycznie wygenerowany, unikalny kod QR i umieść go na ulotkach, stoliku w restauracji, banerze reklamowym lub na firmowym aucie. Klienci skanują go smartfonem i od razu przechodzą do formularza kontaktowego.
+                {t("card2Text")}
               </p>
             </div>
           </article>
@@ -103,9 +98,9 @@ export function CodeShowcase() {
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold mb-3">Bezpośredni link (Landing Page)</h3>
+              <h3 className="text-2xl font-bold mb-3">{t("card3Title")}</h3>
               <p className="text-gray-400 text-sm leading-relaxed max-w-3xl">
-                Nie potrzebujesz własnej strony www ani hostingu, żeby profesjonalnie zbierać zlecenia. Mulbox tworzy dla każdego formularza gotową, czystą stronę docelową. Skopiuj wygenerowany link i umieść go w bio na Instagramie, TikToku, profilu LinkedIn lub wyślij bezpośrednio klientowi w wiadomości.
+                {t("card3Text")}
               </p>
             </div>
           </article>

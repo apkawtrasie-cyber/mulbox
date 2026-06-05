@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { Logo } from "@/components/Logo";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -10,9 +11,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <main className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-md">{children}</div>
       </main>
-      <footer className="container-fluid py-6 text-center text-xs text-slate-500">
-        <Link href="/" className="hover:text-slate-700 dark:hover:text-slate-300">← Wróć na stronę główną</Link>
-      </footer>
+      <AuthFooter />
     </div>
+  );
+}
+
+function AuthFooter() {
+  const t = useTranslations("Auth");
+  return (
+    <footer className="container-fluid py-6 text-center text-xs text-slate-500">
+      <Link href="/" className="hover:text-slate-700 dark:hover:text-slate-300">
+        {t("backHome")}
+      </Link>
+    </footer>
   );
 }

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Ticket, CheckCircle2, AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function RedeemCode({ onSuccess }: { onSuccess?: () => void }) {
+  const t = useTranslations("Dashboard");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -36,7 +38,7 @@ export function RedeemCode({ onSuccess }: { onSuccess?: () => void }) {
   return (
     <form onSubmit={handleRedeem} className="mt-5 border-t border-slate-100 pt-5 space-y-2">
       <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-        <Ticket size={13} /> Kod promocyjny
+        <Ticket size={13} /> {t("redeemLabel")}
       </p>
       <div className="flex gap-1.5">
         <input
@@ -51,7 +53,7 @@ export function RedeemCode({ onSuccess }: { onSuccess?: () => void }) {
           disabled={loading || code.length < 6}
           className="btn-primary py-2 px-3 text-xs shrink-0 disabled:opacity-60"
         >
-          {loading ? "…" : "Aktywuj"}
+          {loading ? "…" : t("redeemBtn")}
         </button>
       </div>
       {result && (

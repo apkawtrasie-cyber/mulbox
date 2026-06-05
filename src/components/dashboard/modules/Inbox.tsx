@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Search, Download, Lock, Mail } from "lucide-react";
 import type { FormRecord, PlanType, SubmissionRecord } from "@/lib/types";
 import { downloadCSV, submissionsToCSV, submissionsToMailingCSV } from "@/lib/csv";
@@ -13,6 +14,7 @@ interface Props {
 
 /** Moduł 3: Skrzynka odbiorcza – dynamiczne kolumny z JSONB + filtr po sender_email + CSV (Premium). */
 export function Inbox({ forms, submissions, plan }: Props) {
+  const t = useTranslations("Dashboard");
   const [formId, setFormId] = useState<string>("all");
   const [query, setQuery] = useState("");
 
@@ -51,8 +53,8 @@ export function Inbox({ forms, submissions, plan }: Props) {
     <section>
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Skrzynka odbiorcza</h1>
-          <p className="text-sm text-slate-500">Wszystkie wiadomości z Twoich formularzy.</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t("inboxTitle")}</h1>
+          <p className="text-sm text-slate-500">{t("inboxSubtitle")}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -62,7 +64,7 @@ export function Inbox({ forms, submissions, plan }: Props) {
             title={isPremium ? "Eksportuj wszystkie zgłoszenia jako CSV" : "Funkcja Premium"}
           >
             {isPremium ? <Download size={16} /> : <Lock size={16} />}
-            {isPremium ? "Eksport CSV" : "Eksport CSV (Premium)"}
+            {isPremium ? t("exportCsv") : t("exportCsvPremium")}
           </button>
           <button
             onClick={exportMailing}
@@ -71,7 +73,7 @@ export function Inbox({ forms, submissions, plan }: Props) {
             title={isPremium ? "Unikalna lista mailowa (email, imię, telefon)" : "Funkcja Premium"}
           >
             {isPremium ? <Mail size={16} /> : <Lock size={16} />}
-            {isPremium ? "Lista mailowa" : "Lista mailowa (Premium)"}
+            {isPremium ? t("mailingList") : t("mailingListPremium")}
           </button>
         </div>
       </header>
@@ -79,7 +81,7 @@ export function Inbox({ forms, submissions, plan }: Props) {
       <div className="card mt-6">
         <div className="flex flex-col sm:flex-row gap-3">
           <select value={formId} onChange={(e) => setFormId(e.target.value)} className="input sm:max-w-xs">
-            <option value="all">Wszystkie formularze</option>
+            <option value="all">{t("allForms")}</option>
             {forms.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
           <div className="relative flex-1">
@@ -87,7 +89,7 @@ export function Inbox({ forms, submissions, plan }: Props) {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Szukaj po adresie email…"
+              placeholder={t("searchByEmail")}
               className="input pl-9"
             />
           </div>
@@ -97,16 +99,16 @@ export function Inbox({ forms, submissions, plan }: Props) {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase text-slate-500 border-b border-slate-200">
-                <th className="px-3 py-2.5">Data</th>
-                <th className="px-3 py-2.5">Email nadawcy</th>
+                <th className="px-3 py-2.5">{t("colDate")}</th>
+                <th className="px-3 py-2.5">{t("colSender")}</th>
                 {dataKeys.map((k) => <th key={k} className="px-3 py-2.5">{k}</th>)}
-                <th className="px-3 py-2.5">Status</th>
+                <th className="px-3 py-2.5">{t("colStatus")}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((s) => (
                 <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="px-3 py-3 text-slate-500 whitespace-nowrap">{new Date(s.created_at).toLocaleString("pl-PL")}</td>
+                  <td className="px-3 py-3 text-slate-500 whitespace-nowrap">{new Date(s.created_at).toLocaleString()}</td>
                   <td className="px-3 py-3 font-medium text-slate-900 whitespace-nowrap">{s.sender_email ?? "—"}</td>
                   {dataKeys.map((k) => (
                     <td key={k} className="px-3 py-3 text-slate-700 max-w-xs truncate" title={String((s.data as Record<string, unknown>)[k] ?? "")}>
@@ -115,8 +117,8 @@ export function Inbox({ forms, submissions, plan }: Props) {
                   ))}
                   <td className="px-3 py-3">
                     {s.is_spam
-                      ? <span className="rounded-full bg-rose-50 text-rose-700 text-xs px-2 py-0.5">Spam</span>
-                      : <span className="rounded-full bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5">OK</span>}
+                      ? <span className="rounded-full bg-rose-50 text-rose-700 text-xs px-2 py-0.5">{t("statusSpam")}</span>
+                      : <span className="rounded-full bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5">{t("statusOk")}</span>}
                   </td>
                 </tr>
               ))}
@@ -125,7 +127,7 @@ export function Inbox({ forms, submissions, plan }: Props) {
           {filtered.length === 0 && (
             <div className="text-center py-12 text-slate-400">
               <Mail className="mx-auto mb-2" size={32} />
-              <p className="text-sm">Brak wiadomości spełniających kryteria.</p>
+              <p className="text-sm">{t("inboxEmpty")}</p>
             </div>
           )}
         </div>

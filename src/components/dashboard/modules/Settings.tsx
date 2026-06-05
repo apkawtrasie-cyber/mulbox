@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Save, Lock, Globe, Mail, CheckCircle2, AlertCircle } from "lucide-react";
 import type { FormRecord, PlanType } from "@/lib/types";
 
@@ -14,6 +15,7 @@ interface Props {
 
 /** Moduł 4: Zaawansowane ustawienia – Free vs Premium. */
 export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
+  const t = useTranslations("Dashboard");
   const router = useRouter();
   const isPremium = plan !== "free";
   const [state, setState] = useState({
@@ -64,7 +66,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
   }, [selectedForm]);
 
   if (!selectedForm) {
-    return <div className="card text-center py-12 text-slate-500">Wybierz formularz, aby zobaczyć ustawienia.</div>;
+    return <div className="card text-center py-12 text-slate-500">{t("settingsNoForm")}</div>;
   }
 
   async function save() {
@@ -104,7 +106,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
         setToast({ type: "err", msg: err.error ?? `Błąd serwera (${res.status})` });
         return;
       }
-      setToast({ type: "ok", msg: "Ustawienia zapisane!" });
+      setToast({ type: "ok", msg: t("settingsSaved") });
       setTimeout(() => setToast(null), 3000);
       router.refresh();
     } catch (e) {
@@ -133,8 +135,8 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
     <section className="space-y-6">
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Ustawienia formularza</h1>
-          <p className="text-sm text-slate-500">Skonfiguruj zaawansowane funkcje wybranego formularza.</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t("settingsTitle")}</h1>
+          <p className="text-sm text-slate-500">{t("settingsSubtitle")}</p>
         </div>
         <div className="flex gap-2">
           <select value={selectedForm.id} onChange={(e) => onSelectForm(e.target.value)} className="input max-w-xs">
@@ -150,35 +152,33 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
               </span>
             )}
             <button onClick={save} disabled={saving} className="btn-primary disabled:opacity-60">
-              <Save size={16} /> {saving ? "Zapisuję…" : "Zapisz"}
+              <Save size={16} /> {saving ? t("saving") : t("save")}
             </button>
           </div>
         </div>
       </header>
 
-      <Card title="E-mail powiadomień" icon={<Mail size={18} />}>
-        <label className="label">Adres e-mail, na który trafią powiadomienia o nowych zgłoszeniach</label>
+      <Card title={t("notifEmailSection")} icon={<Mail size={18} />}>
+        <label className="label">{t("notifEmailLabel")}</label>
         <input
           type="email"
           value={state.notification_email}
           onChange={(e) => set("notification_email", e.target.value)}
-          placeholder="twoj@email.pl"
+          placeholder={t("notifEmailPlaceholder")}
           className="input"
         />
-        <p className="mt-1 text-xs text-slate-500">
-          Domyślnie powiadomienia idą na adres Twojego konta. Wpisz inny e-mail, jeśli chcesz je przekierować.
-        </p>
+        <p className="mt-1 text-xs text-slate-500">{t("notifEmailHint")}</p>
       </Card>
 
-      <Card title="Custom Redirect URL" icon={<Globe size={18} />} premium={!isPremium}>
-        <label className="label">Adres URL strony sukcesu</label>
+      <Card title={t("redirectSection")} icon={<Globe size={18} />} premium={!isPremium}>
+        <label className="label">{t("redirectLabel")}</label>
         <input disabled={!isPremium} value={state.redirect_url} onChange={(e) => set("redirect_url", e.target.value)}
           placeholder="https://twojastrona.pl/dziekujemy" className="input disabled:bg-slate-50" />
-        <p className="mt-1 text-xs text-slate-500">Po wysłaniu formularza klient zostanie przekierowany pod ten adres.</p>
+        <p className="mt-1 text-xs text-slate-500">{t("redirectHint")}</p>
       </Card>
 
-      <Card title="Personalizacja powiadomień" icon={<Mail size={18} />}>
-        <label className="label">Szablon maila do Ciebie (powiadomienie)</label>
+      <Card title={t("notifCustomSection")} icon={<Mail size={18} />}>
+        <label className="label">{t("notifTemplateLabel")}</label>
         <textarea
           ref={customTplRef}
           rows={4} value={state.custom_email_template}
@@ -188,7 +188,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
         />
         {fieldTags.length > 0 && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-slate-400">Wstaw:</span>
+            <span className="text-xs text-slate-400">{t("insertTag")}</span>
             {fieldTags.map((tag) => (
               <button key={tag} type="button"
                 onClick={() => insertTag(tag, customTplRef, "custom_email_template")}
@@ -199,20 +199,20 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
           </div>
         )}
 
-        <label className="label mt-4">Twój podpis (footer maila)</label>
+        <label className="label mt-4">{t("notifSignatureLabel")}</label>
         <textarea rows={2} value={state.notification_signature} onChange={(e) => set("notification_signature", e.target.value)}
-          placeholder="Pozdrawiamy, Zespół Twojej Firmy" className="input resize-none" />
+          placeholder={t("notifSignaturePlaceholder")} className="input resize-none" />
       </Card>
 
-      <Card title="Autoresponder do klienta" icon={<Mail size={18} />} premium={!isPremium}>
+      <Card title={t("autoresponderSection")} icon={<Mail size={18} />} premium={!isPremium}>
         <label className="flex items-center gap-2 text-sm">
           <input disabled={!isPremium} type="checkbox" checked={state.autoresponder_enabled} onChange={(e) => set("autoresponder_enabled", e.target.checked)} />
-          Włącz automatyczną odpowiedź dla klienta
+          {t("autoresponderEnable")}
         </label>
-        <label className="label mt-4">Temat</label>
+        <label className="label mt-4">{t("autoresponderSubjectLabel")}</label>
         <input disabled={!isPremium} value={state.autoresponder_subject} onChange={(e) => set("autoresponder_subject", e.target.value)}
-          placeholder="Dziękujemy za kontakt!" className="input disabled:bg-slate-50" />
-        <label className="label mt-3">Treść</label>
+          placeholder={t("autoresponderSubjectPlaceholder")} className="input disabled:bg-slate-50" />
+        <label className="label mt-3">{t("autoresponderBodyLabel")}</label>
         <textarea
           ref={autoBodyRef}
           disabled={!isPremium} rows={5}
@@ -235,31 +235,31 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
         )}
       </Card>
 
-      <Card title="Dynamiczna strona /p/[id]" icon={<Globe size={18} />} premium={!isPremium}>
+      <Card title={t("formpageSection")} icon={<Globe size={18} />} premium={!isPremium}>
         <label className="flex items-center gap-2 text-sm">
           <input disabled={!isPremium} type="checkbox" checked={state.formpage_enabled} onChange={(e) => set("formpage_enabled", e.target.checked)} />
-          Aktywuj publiczny landing page formularza
+          {t("formpageEnable")}
         </label>
         <label className="flex items-center gap-2 text-sm mt-3">
           <input disabled={!isPremium} type="checkbox" checked={state.formpage_wide} onChange={(e) => set("formpage_wide", e.target.checked)} />
-          Szeroki układ – 2 kolumny na desktopie (Brief / Wycena)
+          {t("formpageWide")}
         </label>
-        <label className="label mt-4">Tytuł</label>
-        <input disabled={!isPremium} value={state.formpage_title} onChange={(e) => set("formpage_title", e.target.value)} className="input disabled:bg-slate-50" placeholder="Skontaktuj się z nami" />
-        <label className="label mt-3">Opis</label>
+        <label className="label mt-4">{t("formpageTitleLabel")}</label>
+        <input disabled={!isPremium} value={state.formpage_title} onChange={(e) => set("formpage_title", e.target.value)} className="input disabled:bg-slate-50" placeholder={t("formpageTitlePlaceholder")} />
+        <label className="label mt-3">{t("formpageDescLabel")}</label>
         <textarea disabled={!isPremium} rows={2} value={state.formpage_description} onChange={(e) => set("formpage_description", e.target.value)}
-          placeholder="Wypełnij formularz, a odezwiemy się do Ciebie." className="input resize-none disabled:bg-slate-50" />
+          placeholder={t("formpageDescPlaceholder")} className="input resize-none disabled:bg-slate-50" />
 
-        <label className="label mt-4">URL logo (adres obrazka)</label>
+        <label className="label mt-4">{t("formpageLogoLabel")}</label>
         <input disabled={!isPremium} value={state.formpage_logo_url} onChange={(e) => set("formpage_logo_url", e.target.value)}
-          placeholder="https://twojastrona.pl/logo.png" className="input disabled:bg-slate-50" />
+          placeholder={t("formpageLogoPlaceholder")} className="input disabled:bg-slate-50" />
         {state.formpage_logo_url && (
           <img src={state.formpage_logo_url} alt="podgląd logo" className="mt-2 h-12 object-contain rounded border border-slate-100" />
         )}
 
         <div className="mt-4 grid grid-cols-2 gap-4">
           <div>
-            <label className="label">Kolor tła</label>
+            <label className="label">{t("formpageBgColorLabel")}</label>
             <div className="flex items-center gap-2">
               <input disabled={!isPremium} type="color" value={state.formpage_bg_color}
                 onChange={(e) => set("formpage_bg_color", e.target.value)}
@@ -270,7 +270,7 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
             </div>
           </div>
           <div>
-            <label className="label">Kolor przycisku</label>
+            <label className="label">{t("formpageAccentColorLabel")}</label>
             <div className="flex items-center gap-2">
               <input disabled={!isPremium} type="color" value={state.formpage_accent_color}
                 onChange={(e) => set("formpage_accent_color", e.target.value)}
@@ -282,10 +282,10 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
           </div>
         </div>
 
-        <label className="label mt-4">Stopka strony formularza</label>
+        <label className="label mt-4">{t("formpageFooterLabel")}</label>
         <textarea disabled={!isPremium} rows={2} value={state.formpage_footer}
           onChange={(e) => set("formpage_footer", e.target.value)}
-          placeholder="© 2024 Twoja Firma · ul. Przykładowa 1 · kontakt@firma.pl"
+          placeholder={t("formpageFooterPlaceholder")}
           className="input resize-none disabled:bg-slate-50" />
       </Card>
     </section>
@@ -293,11 +293,12 @@ export function Settings({ forms, selectedForm, onSelectForm, plan }: Props) {
 }
 
 function Card({ title, icon, premium, children }: { title: string; icon: React.ReactNode; premium?: boolean; children: React.ReactNode }) {
+  const t = useTranslations("Dashboard");
   return (
     <section className="card relative">
       <header className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-semibold text-slate-900"><span className="text-brand-700">{icon}</span> {title}</h2>
-        {premium && <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5"><Lock size={12} /> Premium</span>}
+        {premium && <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5"><Lock size={12} /> {t("premiumBadge")}</span>}
       </header>
       <div className="mt-4">{children}</div>
     </section>

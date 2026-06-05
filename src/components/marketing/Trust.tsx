@@ -1,10 +1,5 @@
 import { Gauge, Rocket, Timer } from "lucide-react";
-
-const STATS = [
-  { icon: Gauge, value: "< 1s", label: "Czas ładowania formularza na smartfonie" },
-  { icon: Rocket, value: "100%", label: "Wynik optymalizacji w Google PageSpeed Insights" },
-  { icon: Timer, value: "2 min", label: "Pełna konfiguracja i wdrożenie na stronę" },
-];
+import { useTranslations } from "next-intl";
 
 const TECH = [
   "Next.js (React 19)",
@@ -16,14 +11,21 @@ const TECH = [
 
 /** Sekcja techniczna – fundament technologiczny + twarde parametry wydajnościowe. */
 export function Trust() {
+  const t = useTranslations("Trust");
+  const STATS = [
+    { icon: Gauge, value: "< 1s", label: t("speedLabel") },
+    { icon: Rocket, value: "100%", label: t("perfLabel") },
+    { icon: Timer, value: t("setupValue"), label: t("setupLabel") },
+  ];
+
   return (
     <section className="container-fluid pb-16" aria-labelledby="trust-heading">
       <h2 id="trust-heading" className="text-center text-slate-700 dark:text-slate-200 font-medium">
-        Zbudowany na fundamencie najnowszych technologii
+        {t("heading")}
       </h2>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-slate-500 dark:text-slate-400 text-base sm:text-lg font-semibold">
-        {TECH.map((t) => (
-          <span key={t} className="opacity-80 hover:opacity-100 transition">{t}</span>
+        {TECH.map((tech) => (
+          <span key={tech} className="opacity-80 hover:opacity-100 transition">{tech}</span>
         ))}
       </div>
 

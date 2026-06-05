@@ -91,9 +91,19 @@ const JSON_LD = {
   publisher: { "@type": "Organization", name: "Mulbox", url: APP_URL, logo: `${APP_URL}/logo.mulbox.ch.png` },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // locale jest ustawiane dynamicznie przez next-intl przez setRequestLocale w [locale]/layout.tsx
+  const { getLocale } = await import("next-intl/server");
+  let locale = "de";
+  try {
+    locale = await getLocale();
+  } catch {
+    // Fallback dla tras nielokalizowanych (dashboard/admin)
+    locale = "pl";
+  }
+
   return (
-    <html lang="pl">
+    <html lang={locale}>
       <head>
         <script
           type="application/ld+json"

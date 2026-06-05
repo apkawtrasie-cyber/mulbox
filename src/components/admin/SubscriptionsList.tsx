@@ -1,12 +1,14 @@
 import type { Profile } from "@/lib/types";
 import { CreditCard } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 interface Props {
   profiles: Profile[];
 }
 
 /** Lista aktywnych subskrypcji (Personal/Business). Tylko widoczna dla admina. */
-export function SubscriptionsList({ profiles }: Props) {
+export async function SubscriptionsList({ profiles }: Props) {
+  const t = await getTranslations("Admin");
   const subscribers = profiles.filter(
     (p) => p.plan_type === "personal" || p.plan_type === "business"
   );
@@ -16,9 +18,9 @@ export function SubscriptionsList({ profiles }: Props) {
       <section className="card">
         <header className="flex items-center gap-2 mb-3">
           <CreditCard className="w-5 h-5 text-violet-600" />
-          <h2 className="text-lg font-semibold text-slate-900">Aktywne subskrypcje</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{t("subsTitle")}</h2>
         </header>
-        <p className="text-sm text-slate-500">Brak aktywnych subskrypcji.</p>
+        <p className="text-sm text-slate-500">{t("subsEmpty")}</p>
       </section>
     );
   }
@@ -28,10 +30,10 @@ export function SubscriptionsList({ profiles }: Props) {
       <header className="flex items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <CreditCard className="w-5 h-5 text-violet-600" />
-          <h2 className="text-lg font-semibold text-slate-900">Aktywne subskrypcje</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{t("subsTitle")}</h2>
         </div>
         <span className="text-xs font-semibold rounded-full bg-violet-100 text-violet-700 px-2.5 py-1">
-          {subscribers.length} {subscribers.length === 1 ? "subskrypcja" : "subskrypcji"}
+          {subscribers.length}
         </span>
       </header>
 
@@ -39,11 +41,11 @@ export function SubscriptionsList({ profiles }: Props) {
         <table className="w-full text-sm">
           <thead className="text-xs uppercase text-slate-500 border-b">
             <tr>
-              <th className="text-left py-2 pr-3">Klient</th>
-              <th className="text-left py-2 pr-3">Plan</th>
-              <th className="text-left py-2 pr-3">Stripe Customer ID</th>
-              <th className="text-left py-2 pr-3">Wygasa</th>
-              <th className="text-left py-2 pr-3">Założył konto</th>
+              <th className="text-left py-2 pr-3">{t("colClient")}</th>
+              <th className="text-left py-2 pr-3">{t("colPlan")}</th>
+              <th className="text-left py-2 pr-3">{t("colStripeId")}</th>
+              <th className="text-left py-2 pr-3">{t("colExpiry")}</th>
+              <th className="text-left py-2 pr-3">{t("colCreated")}</th>
             </tr>
           </thead>
           <tbody>
@@ -75,16 +77,16 @@ export function SubscriptionsList({ profiles }: Props) {
                       {p.stripe_customer_id}
                     </a>
                   ) : (
-                    <span className="text-slate-400">brak</span>
+                    <span className="text-slate-400">—</span>
                   )}
                 </td>
                 <td className="py-3 pr-3 text-slate-600 text-xs">
                   {p.plan_expires_at
-                    ? new Date(p.plan_expires_at).toLocaleDateString("pl-PL")
-                    : <span className="text-emerald-700">aktywna (Stripe)</span>}
+                    ? new Date(p.plan_expires_at).toLocaleDateString()
+                    : <span className="text-emerald-700">{t("activeStripe")}</span>}
                 </td>
                 <td className="py-3 pr-3 text-slate-500 text-xs">
-                  {p.created_at ? new Date(p.created_at).toLocaleDateString("pl-PL") : "—"}
+                  {p.created_at ? new Date(p.created_at).toLocaleDateString() : "—"}
                 </td>
               </tr>
             ))}

@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { createServerSupabase, createServiceSupabase } from "@/lib/supabase-server";
 import type { Profile } from "@/lib/types";
@@ -11,7 +12,10 @@ import type { Profile } from "@/lib/types";
 export const requireUser = cache(async function requireUser(): Promise<{ profile: Profile; userId: string }> {
   const supabase = createServerSupabase();
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) redirect("/login");
+  if (error || !user) {
+    const locale = await getLocale();
+    redirect(locale === "de" ? "/login" : `/${locale}/login`);
+  }
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -36,13 +40,19 @@ export const requireUser = cache(async function requireUser(): Promise<{ profile
     .eq("id", user.id)
     .maybeSingle<Profile>();
 
-  if (!created) redirect("/login");
-  return { profile: created, userId: user.id };
+  if (!created) {
+    const locale = await getLocale();
+    redirect(locale === "de" ? "/login" : `/${locale}/login`);
+  }
+  return { profile: created!, userId: user.id };
 });
 
 /** Wymusza rolę admin – w przeciwnym razie wyrzuca na /dashboard. */
 export const requireAdmin = cache(async function requireAdmin(): Promise<{ profile: Profile; userId: string }> {
   const ctx = await requireUser();
-  if (ctx.profile.role !== "admin") redirect("/dashboard");
+  if (ctx.profile.role !== "admin") {
+    const locale = await getLocale();
+    redirect(locale === "de" ? "/dashboard" : `/${locale}/dashboard`);
+  }
   return ctx;
 });

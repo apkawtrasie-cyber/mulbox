@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/routing";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { UserPlus, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function RegisterPage() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,15 +31,14 @@ export default function RegisterPage() {
       });
       if (err) throw err;
 
-      // Jeśli email-confirmation OFF → mamy sesję od razu
       if (data.session) {
         router.push("/dashboard");
         router.refresh();
         return;
       }
-      setInfo("Sprawdź skrzynkę – wysłaliśmy link aktywacyjny.");
+      setInfo(t("registerInfo"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nie udało się utworzyć konta.");
+      setError(err instanceof Error ? err.message : t("registerError"));
     } finally {
       setLoading(false);
     }
@@ -46,21 +46,21 @@ export default function RegisterPage() {
 
   return (
     <div className="card">
-      <h1 className="text-2xl font-bold text-slate-900">Załóż konto</h1>
-      <p className="mt-1 text-sm text-slate-500">Plan Free, bez karty kredytowej.</p>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("registerH1")}</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("registerSubtitle")}</p>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <div>
-          <label htmlFor="full_name" className="label">Imię i nazwisko</label>
+          <label htmlFor="full_name" className="label">{t("labelFullName")}</label>
           <input id="full_name" name="full_name" required className="input" />
         </div>
         <div>
-          <label htmlFor="email" className="label">Email</label>
+          <label htmlFor="email" className="label">{t("labelEmail")}</label>
           <input id="email" name="email" type="email" required autoComplete="email" className="input" />
         </div>
         <div>
-          <label htmlFor="password" className="label">Hasło</label>
+          <label htmlFor="password" className="label">{t("labelPassword")}</label>
           <input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" className="input" />
-          <p className="mt-1 text-xs text-slate-500">Minimum 8 znaków.</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("passwordHint")}</p>
         </div>
         {error && (
           <p className="flex items-center gap-2 text-sm text-rose-600"><AlertCircle size={16} /> {error}</p>
@@ -69,12 +69,14 @@ export default function RegisterPage() {
           <p className="flex items-center gap-2 text-sm text-emerald-700"><CheckCircle2 size={16} /> {info}</p>
         )}
         <button disabled={loading} className="btn-primary w-full disabled:opacity-60">
-          <UserPlus size={16} /> {loading ? "Tworzenie konta…" : "Załóż darmowe konto"}
+          <UserPlus size={16} /> {loading ? t("registerSubmitting") : t("registerSubmit")}
         </button>
       </form>
-      <p className="mt-6 text-center text-sm text-slate-600">
-        Masz już konto?{" "}
-        <Link href="/login" className="font-semibold text-brand-700 hover:underline">Zaloguj się</Link>
+      <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
+        {t("haveAccount")}{" "}
+        <Link href="/login" className="font-semibold text-brand-700 dark:text-brand-400 hover:underline">
+          {t("loginLink")}
+        </Link>
       </p>
     </div>
   );

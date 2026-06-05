@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Sparkles, Plus, Loader2, Check, Crown, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { FormField, PlanType } from "@/lib/types";
 
 const FREE_LIMIT = 5;
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function AIPanel({ plan, onAddField }: Props) {
+  const t = useTranslations("Dashboard");
   const isPremium = plan !== "free";
   const [goal, setGoal] = useState("");
   const [maxQuestions, setMaxQuestions] = useState(8);
@@ -93,19 +95,15 @@ export function AIPanel({ plan, onAddField }: Props) {
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 mx-auto mb-4">
               <Crown size={26} />
             </div>
-            <h3 className="font-bold text-xl text-slate-900 mb-2">Limit darmowych generacji</h3>
-            <p className="text-sm text-slate-500 mb-2">
-              Wykorzystałeś <strong>{FREE_LIMIT}/{FREE_LIMIT}</strong> darmowych generacji pytań AI.
-            </p>
-            <p className="text-sm text-slate-500 mb-6">
-              Przejdź na plan <strong>Personal lub Business</strong>, aby korzystać bez limitów i generować do 15 pytań jednorazowo.
-            </p>
+            <h3 className="font-bold text-xl text-slate-900 mb-2">{t("aiUpgradeTitle")}</h3>
+            <p className="text-sm text-slate-500 mb-2">{t("aiUpgradeDesc1", { max: FREE_LIMIT })}</p>
+            <p className="text-sm text-slate-500 mb-6">{t("aiUpgradeDesc2")}</p>
             <div className="flex gap-3">
               <button onClick={() => setShowUpgradeModal(false)} className="btn-secondary flex-1 text-sm">
-                Zamknij
+                {t("aiClose")}
               </button>
               <a href="/pricing" className="btn-primary flex-1 text-sm">
-                <Crown size={14} /> Ulepsz plan
+                <Crown size={14} /> {t("aiUpgradeBtn")}
               </a>
             </div>
           </div>
@@ -124,28 +122,28 @@ export function AIPanel({ plan, onAddField }: Props) {
           }`}>
             <span>
               {freeExhausted
-                ? "Limit darmowych generacji wyczerpany."
-                : `Darmowy limit: ${genCount}/${FREE_LIMIT} generacji · maks. ${FREE_MAX_Q} pytań`}
+                ? t("aiLimitExhausted")
+                : t("aiFreeLimit", { count: genCount, max: FREE_LIMIT, maxQ: FREE_MAX_Q })}
             </span>
             {freeExhausted && (
-              <a href="/pricing" className="font-semibold underline whitespace-nowrap">Ulepsz plan →</a>
+              <a href="/pricing" className="font-semibold underline whitespace-nowrap">{t("aiUpgradePlan")}</a>
             )}
           </div>
         )}
 
-        <label className="label">Opisz cel formularza</label>
+        <label className="label">{t("aiGoalLabel")}</label>
         <textarea
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
           rows={3}
-          placeholder="Np. Ankieta dla klientów warsztatu samochodowego, zbieramy opinie po naprawie."
+          placeholder={t("aiGoalPlaceholder")}
           className="input resize-none text-sm"
         />
 
         {/* Slider liczby pytań */}
         <div className="mt-3">
           <div className="flex items-center justify-between mb-1">
-            <label className="text-xs text-slate-500">Liczba pytań</label>
+            <label className="text-xs text-slate-500">{t("aiQuestionCount")}</label>
             <span className="text-xs font-semibold text-violet-700">{effectiveMax}</span>
           </div>
           <input
@@ -169,8 +167,8 @@ export function AIPanel({ plan, onAddField }: Props) {
           className="btn-primary mt-3 disabled:opacity-60"
         >
           {loading
-            ? <><Loader2 size={15} className="animate-spin" /> Generuję…</>
-            : <><Sparkles size={15} /> Generuj pytania</>}
+            ? <><Loader2 size={15} className="animate-spin" /> {t("aiGenerating")}</>
+            : <><Sparkles size={15} /> {t("aiGenerateBtn")}</>}
         </button>
 
         {error && (
@@ -179,7 +177,7 @@ export function AIPanel({ plan, onAddField }: Props) {
 
         {questions.length > 0 && (
           <div className="mt-4 flex-1 overflow-auto space-y-2">
-            <p className="text-xs text-slate-400 mb-2">Kliknij + aby dodać pytanie do formularza:</p>
+            <p className="text-xs text-slate-400 mb-2">{t("aiClickToAdd")}</p>
             {questions.map((q, i) => (
               <div
                 key={i}
@@ -207,9 +205,7 @@ export function AIPanel({ plan, onAddField }: Props) {
         )}
 
         {questions.length === 0 && !loading && !error && (
-          <p className="mt-8 text-center text-sm text-slate-400">
-            Opisz cel formularza i kliknij „Generuj pytania".
-          </p>
+          <p className="mt-8 text-center text-sm text-slate-400">{t("aiEmptyHint")}</p>
         )}
       </div>
     </>

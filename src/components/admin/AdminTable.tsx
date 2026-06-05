@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Search, Power, Shield } from "lucide-react";
 import type { FormRecord, Profile } from "@/lib/types";
 
@@ -9,6 +10,7 @@ interface Props { forms: FormRecord[]; profiles: Profile[] }
 
 /** Tabela wszystkich formularzy z możliwością globalnego wyłączenia. */
 export function AdminTable({ forms, profiles }: Props) {
+  const t = useTranslations("Admin");
   const router = useRouter();
   const [query, setQuery] = useState("");
   const profilesById = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
@@ -25,8 +27,7 @@ export function AdminTable({ forms, profiles }: Props) {
   }, [forms, query, profilesById]);
 
   async function toggle(id: string, current: boolean) {
-    const action = current ? "wyłączyć" : "włączyć";
-    if (!confirm(`Na pewno ${action} ten formularz?`)) return;
+    if (!confirm(`${current ? t("disable") : t("enable")}?`)) return;
     await fetch(`/api/admin/forms/${id}/toggle`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -47,10 +48,10 @@ export function AdminTable({ forms, profiles }: Props) {
   return (
     <section className="card">
       <header className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-slate-900">Formularze i użytkownicy</h2>
+        <h2 className="text-lg font-semibold text-slate-900">{t("tableTitle")}</h2>
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Szukaj…" className="input pl-9 w-64" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("searchPlaceholder")} className="input pl-9 w-64" />
         </div>
       </header>
 
@@ -58,11 +59,11 @@ export function AdminTable({ forms, profiles }: Props) {
         <table className="min-w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase text-slate-500 border-b border-slate-200">
-              <th className="px-3 py-2.5">Formularz</th>
-              <th className="px-3 py-2.5">Właściciel</th>
-              <th className="px-3 py-2.5">Plan</th>
-              <th className="px-3 py-2.5">Status</th>
-              <th className="px-3 py-2.5">Akcje</th>
+              <th className="px-3 py-2.5">{t("colForm")}</th>
+              <th className="px-3 py-2.5">{t("colOwner")}</th>
+              <th className="px-3 py-2.5">{t("colPlan")}</th>
+              <th className="px-3 py-2.5">{t("colStatus")}</th>
+              <th className="px-3 py-2.5">{t("colActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -95,12 +96,12 @@ export function AdminTable({ forms, profiles }: Props) {
                   </td>
                   <td className="px-3 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${f.is_active ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
-                      {f.is_active ? "Aktywny" : "Wyłączony"}
+                      {f.is_active ? t("formActive") : t("formInactive")}
                     </span>
                   </td>
                   <td className="px-3 py-3">
                     <button onClick={() => toggle(f.id, f.is_active)} className="btn-secondary text-xs py-1.5 px-2.5">
-                      <Power size={14} /> {f.is_active ? "Wyłącz" : "Włącz"}
+                      <Power size={14} /> {f.is_active ? t("disable") : t("enable")}
                     </button>
                   </td>
                 </tr>
@@ -108,7 +109,7 @@ export function AdminTable({ forms, profiles }: Props) {
             })}
           </tbody>
         </table>
-        {filtered.length === 0 && <p className="text-center py-8 text-slate-400 text-sm">Brak wyników.</p>}
+        {filtered.length === 0 && <p className="text-center py-8 text-slate-400 text-sm">{t("noResults")}</p>}
       </div>
     </section>
   );

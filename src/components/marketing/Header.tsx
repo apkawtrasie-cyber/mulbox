@@ -1,22 +1,25 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/dashboard/ThemeToggle";
-
-const NAV = [
-  { href: "/#funkcje", label: "Funkcje" },
-  { href: "/#przyklady", label: "Przykłady" },
-  { href: "/pricing", label: "Cennik" },
-  { href: "/#faq", label: "FAQ" },
-  { href: "/kontakt", label: "Kontakt" },
-];
+import { Link } from "@/i18n/routing";
+import { LanguageSwitcher } from "@/components/marketing/LanguageSwitcher";
 
 /** Sticky, w pełni responsywny header strefy publicznej. */
 export function Header() {
+  const t = useTranslations("Header");
   const [open, setOpen] = useState(false);
+
+  const NAV = [
+    { href: "/#funkcje", label: t("navFunctions") },
+    { href: "/#przyklady", label: t("navExamples") },
+    { href: "/pricing", label: t("navPricing") },
+    { href: "/#faq", label: t("navFaq") },
+    { href: "/kontakt", label: t("navContact") },
+  ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-100 dark:border-[#2a2a3a] bg-white/80 dark:bg-[#0d0d1a]/90 backdrop-blur">
@@ -30,14 +33,15 @@ export function Header() {
           ))}
         </nav>
         <div className="hidden md:flex items-center gap-3">
+          <LanguageSwitcher />
           <ThemeToggle />
-          <Link href="/login" className="btn-ghost">Zaloguj się</Link>
-          <Link href="/register" className="btn-primary">Załóż konto</Link>
+          <Link href="/login" className="btn-ghost">{t("login")}</Link>
+          <Link href="/register" className="btn-primary">{t("register")}</Link>
         </div>
         <button
           className="md:hidden inline-flex items-center justify-center rounded-lg p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100"
           onClick={() => setOpen((v) => !v)}
-          aria-label="Otwórz menu"
+          aria-label={t("openMenu")}
         >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -53,12 +57,15 @@ export function Header() {
             ))}
             <div className="mt-2 flex flex-col gap-2">
               <div className="flex items-center justify-between py-1">
-                <span className="text-sm text-slate-500 dark:text-slate-400">Motyw</span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">{t("theme")}</span>
                 <ThemeToggle />
               </div>
+              <div className="py-1">
+                <LanguageSwitcher />
+              </div>
               <div className="grid grid-cols-2 gap-2">
-                <Link href="/login" className="btn-secondary w-full">Zaloguj</Link>
-                <Link href="/register" className="btn-primary w-full">Załóż konto</Link>
+                <Link href="/login" className="btn-secondary w-full">{t("loginShort")}</Link>
+                <Link href="/register" className="btn-primary w-full">{t("register")}</Link>
               </div>
             </div>
           </div>

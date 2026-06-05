@@ -1,40 +1,23 @@
 import { FileText, Palette, Link2, Mail, BarChart3 } from "lucide-react";
-
-const FEATURES = [
-  {
-    icon: FileText,
-    title: "Formularz na każdą okazję",
-    text: "Kontaktowe, ankiety, zapisy na newsletter czy formularze zamówień. Stwórz dokładnie to, czego w tym momencie potrzebuje Twój biznes, bez ograniczeń.",
-  },
-  {
-    icon: Palette,
-    title: "Twój unikalny styl",
-    text: "Dopasuj każdy element, kolor, tło i czcionkę do swojej marki w kilka sekund. Zapomnij o brzydkich, generycznych polach, które odstraszają odwiedzających.",
-  },
-  {
-    icon: Link2,
-    title: "Wdrożenie w 60 sekund",
-    text: "Skopiuj jeden gotowy kod na swoją stronę (WordPress, Next.js, Webflow) lub wyślij bezpośredni, elegancki link klientom na social mediach.",
-  },
-  {
-    icon: Mail,
-    title: "0 straconych kontaktów",
-    text: "Każda odpowiedź natychmiast trafia do Twojego bezpiecznego panelu oraz na Twój e-mail. Masz pewność, że żadne zapytanie ofertowe nie wpadnie w próżnię.",
-  },
-  {
-    icon: BarChart3,
-    title: "Biznes pod pełną kontrolą",
-    text: "Przeglądaj, filtruj i eksportuj bazę swoich potencjalnych klientów. Koniec z chaosem w skrzynce – buduj zorganizowaną listę odbiorców i zarabiaj więcej.",
-  },
-];
+import { useTranslations } from "next-intl";
 
 /** Sekcja "Funkcje" – glassmorphism z delikatnymi niebieskimi akcentami w rogach. */
 export function Features() {
+  const t = useTranslations("Features");
+
+  const FEATURES = [
+    { icon: FileText, title: t("f1Title"), text: t("f1Text") },
+    { icon: Palette,  title: t("f2Title"), text: t("f2Text") },
+    { icon: Link2,    title: t("f3Title"), text: t("f3Text") },
+    { icon: Mail,     title: t("f4Title"), text: t("f4Text") },
+    { icon: BarChart3, title: t("f5Title"), text: t("f5Text") },
+  ];
+
   return (
     <section id="funkcje" className="section" aria-labelledby="features-heading">
       <div className="container-fluid">
         <h2 id="features-heading" className="sr-only">
-          Funkcje Mulbox
+          {t("srHeading")}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 sm:gap-6">
           {FEATURES.map(({ icon: Icon, title, text }) => (
