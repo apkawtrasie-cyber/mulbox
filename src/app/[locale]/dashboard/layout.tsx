@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/dashboard/ThemeToggle";
 import { SetupRequired } from "@/components/SetupRequired";
 import { Shield } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { LanguageSwitcher } from "@/components/marketing/LanguageSwitcher";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   if (!isSupabaseConfigured()) return <SetupRequired />;
@@ -37,6 +38,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </Link>
             )}
             <span className="hidden md:inline text-slate-600">{profile.email}</span>
+            <LanguageSwitcher />
             <ThemeToggle />
             <LogoutButton />
           </div>
