@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createServiceSupabase } from "@/lib/supabase-server";
 import type { FormRecord } from "@/lib/types";
 import PublicForm from "./PublicForm";
+import ConversationalForm from "./ConversationalForm";
 
 interface PageProps { params: { formId: string } }
 
@@ -33,6 +34,7 @@ export default async function FormPage({ params }: PageProps) {
   const accentColor = data.config?.formpage_accent_color ?? "#7c3aed";
   const footer = data.config?.formpage_footer;
   const wide = data.config?.formpage_wide ?? false;
+  const isConversational = data.config?.form_type === "conversational";
 
   return (
     <main
@@ -48,15 +50,25 @@ export default async function FormPage({ params }: PageProps) {
         <h1 className="text-3xl font-bold text-slate-900 text-center">{title}</h1>
         <p className="mt-2 text-center text-slate-600">{desc}</p>
 
-        <PublicForm
-          formId={data.id}
-          fields={data.config.fields ?? []}
-          submitLabel={submitLabel}
-          siteKey={siteKey}
-          accentColor={accentColor}
-          footer={footer}
-          wide={wide}
-        />
+        {isConversational ? (
+          <ConversationalForm
+            formId={data.id}
+            intro={data.config?.conversation_intro}
+            accentColor={accentColor}
+            footer={footer}
+            siteKey={siteKey}
+          />
+        ) : (
+          <PublicForm
+            formId={data.id}
+            fields={data.config.fields ?? []}
+            submitLabel={submitLabel}
+            siteKey={siteKey}
+            accentColor={accentColor}
+            footer={footer}
+            wide={wide}
+          />
+        )}
       </div>
     </main>
   );

@@ -8,6 +8,10 @@ const nextConfig = {
   poweredByHeader: false,
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    // Dołącz pliki czcionek do serverless function generującej PDF załączniki.
+    outputFileTracingIncludes: {
+      "/api/f/[formId]": ["./src/lib/fonts/**"],
+    },
   },
 };
 

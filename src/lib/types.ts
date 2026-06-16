@@ -46,7 +46,13 @@ export interface FormConfig {
   formpage_accent_color?: string;
   formpage_footer?: string;
   formpage_wide?: boolean;
-  form_type?: "standard" | "brief";
+  form_type?: "standard" | "brief" | "conversational";
+  /** Tryb konwersacyjny: kontekst/cel, na podstawie którego AI prowadzi rozmowę. */
+  conversation_goal?: string;
+  /** Wiadomość powitalna pokazywana przed pierwszym pytaniem AI. */
+  conversation_intro?: string;
+  /** Maksymalna liczba pytań w rozmowie (3–15). */
+  conversation_max?: number;
 }
 
 export interface FormRecord {

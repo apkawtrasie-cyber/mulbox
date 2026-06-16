@@ -22,6 +22,10 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
   const router = useRouter();
   const [fields, setFields] = useState<FormField[]>(selectedForm?.config?.fields ?? []);
   const [name, setName] = useState(selectedForm?.name ?? "");
+  const [formType, setFormType] = useState(selectedForm?.config?.form_type ?? "standard");
+  const [convGoal, setConvGoal] = useState(selectedForm?.config?.conversation_goal ?? "");
+  const [convIntro, setConvIntro] = useState(selectedForm?.config?.conversation_intro ?? "");
+  const [convMax, setConvMax] = useState(selectedForm?.config?.conversation_max ?? 8);
   const [copied, setCopied] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -31,6 +35,10 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
   useEffect(() => {
     setFields(selectedForm?.config?.fields ?? []);
     setName(selectedForm?.name ?? "");
+    setFormType(selectedForm?.config?.form_type ?? "standard");
+    setConvGoal(selectedForm?.config?.conversation_goal ?? "");
+    setConvIntro(selectedForm?.config?.conversation_intro ?? "");
+    setConvMax(selectedForm?.config?.conversation_max ?? 8);
   }, [selectedForm?.id]);
 
   const html = useMemo(() => {
@@ -58,7 +66,17 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
       await fetch(`/api/forms/${selectedForm.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, config: { ...selectedForm.config, fields } }),
+        body: JSON.stringify({
+          name,
+          config: {
+            ...selectedForm.config,
+            fields,
+            form_type: formType,
+            conversation_goal: convGoal,
+            conversation_intro: convIntro,
+            conversation_max: convMax,
+          },
+        }),
       });
       router.refresh();
     } finally { setSaving(false); }
@@ -190,6 +208,71 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
         );
       })()}
 
+      {/* Tryb formularza: standardowy vs konwersacyjny (AI) */}
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-slate-900 mr-1">Tryb formularza:</span>
+          <button
+            type="button"
+            onClick={() => setFormType("standard")}
+            className={`text-sm py-1.5 px-3 rounded-lg border ${formType !== "conversational" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200"}`}
+          >
+            Standardowy
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormType("conversational")}
+            className={`inline-flex items-center gap-1.5 text-sm py-1.5 px-3 rounded-lg border ${formType === "conversational" ? "bg-violet-600 text-white border-violet-600" : "bg-white text-slate-600 border-slate-200"}`}
+          >
+            <Sparkles size={13} /> Konwersacyjny (AI)
+          </button>
+        </div>
+
+        {formType === "conversational" && (
+          <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+            <p className="text-xs text-slate-500">
+              AI prowadzi rozmowę z osobą wypełniającą (pytanie po pytaniu), a na końcu wysyła Ci streszczenie odpowiedzi. W tym trybie nie budujesz pól ręcznie — wystarczy opisać cel poniżej.
+            </p>
+            <div>
+              <label className="label">{t("formName")}</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
+            </div>
+            <div>
+              <label className="label">Cel rozmowy (co AI ma ustalić)</label>
+              <textarea
+                value={convGoal}
+                onChange={(e) => setConvGoal(e.target.value)}
+                rows={3}
+                placeholder="Np. Zbierz brief do strony internetowej: branża, cel strony, podstrony, styl/kolory, budżet, termin, przykłady stron które się podobają."
+                className="input resize-none text-sm"
+              />
+            </div>
+            <div>
+              <label className="label">Wiadomość powitalna (opcjonalnie)</label>
+              <input
+                value={convIntro}
+                onChange={(e) => setConvIntro(e.target.value)}
+                placeholder="Cześć! Zadam Ci kilka pytań, żeby przygotować wycenę."
+                className="input text-sm"
+              />
+            </div>
+            <div>
+              <label className="label">Maks. liczba pytań: {convMax}</label>
+              <input
+                type="range"
+                min={3}
+                max={15}
+                value={convMax}
+                onChange={(e) => setConvMax(Number(e.target.value))}
+                className="w-full accent-violet-600"
+              />
+            </div>
+            <p className="text-xs text-amber-600">Pamiętaj kliknąć „Zapisz", a potem otwórz publiczny link, by przetestować rozmowę.</p>
+          </div>
+        )}
+      </div>
+
+      {formType !== "conversational" && (
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
         {/* Edytor + HTML/AI – first on mobile */}
         <div className="order-1 lg:order-2 grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -307,6 +390,7 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
           <QuickAddFieldsPanel onAddField={addPreset} />
         </div>
       </div>
+      )}
     </section>
   );
 }

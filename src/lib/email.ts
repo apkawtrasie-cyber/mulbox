@@ -5,15 +5,21 @@ const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "powiadomienia@mulbox.ch";
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+}
+
 interface SendArgs {
   to: string;
   subject: string;
   html: string;
   replyTo?: string;
+  attachments?: EmailAttachment[];
 }
 
 /** Cienka warstwa nad Resend – jeśli brak klucza, loguje (dev). */
-export async function sendEmail({ to, subject, html, replyTo }: SendArgs): Promise<void> {
+export async function sendEmail({ to, subject, html, replyTo, attachments }: SendArgs): Promise<void> {
   if (!resend) {
     // eslint-disable-next-line no-console
     console.warn("[email] RESEND_API_KEY brak – pomijam wysyłkę:", { to, subject });
@@ -25,6 +31,7 @@ export async function sendEmail({ to, subject, html, replyTo }: SendArgs): Promi
     subject,
     html,
     replyTo: replyTo,
+    attachments: attachments?.map((a) => ({ filename: a.filename, content: a.content })),
   });
   if (error) {
     // eslint-disable-next-line no-console
@@ -90,6 +97,43 @@ export function renderDefaultNotification(formName: string, data: Record<string,
     <h2 style="margin:0 0 4px;font-size:18px">Nowe zgłoszenie z formularza</h2>
     <p style="margin:0;color:#64748b;font-size:14px">${escapeHtml(formName)}</p>
     <table style="width:100%;margin-top:16px;border-collapse:collapse">${rows}</table>
+  </div>`;
+}
+
+/**
+ * Renderuje czytelny mail dla zgłoszenia konwersacyjnego:
+ * dane kontaktowe, streszczenie AI, a następnie pytania → odpowiedzi po kolei.
+ */
+export function renderConversationNotification(
+  formName: string,
+  opts: { name?: string; email?: string; qa: Array<{ q: string; a: string }>; summary?: string },
+): string {
+  const qaHtml = opts.qa
+    .map(
+      (item, i) => `<div style="margin:0 0 14px">
+        <p style="margin:0 0 2px;font-size:12px;color:#7c3aed;font-weight:600">${i + 1}. ${escapeHtml(item.q)}</p>
+        <p style="margin:0;font-size:14px;color:#0f172a">${escapeHtml(item.a || "—").replace(/\n/g, "<br/>")}</p>
+      </div>`,
+    )
+    .join("");
+
+  const contact = [opts.name, opts.email].filter((v): v is string => Boolean(v)).map(escapeHtml).join(" · ");
+
+  const summaryBlock = opts.summary
+    ? `<div style="margin:16px 0;padding:14px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#6d28d9">Streszczenie</p>
+        <p style="margin:0;font-size:14px;color:#0f172a;line-height:1.55">${escapeHtml(opts.summary).replace(/\n/g, "<br/>")}</p>
+      </div>`
+    : "";
+
+  return `<div style="font-family:Inter,Arial,sans-serif;color:#0f172a;max-width:600px;margin:0 auto">
+    <h2 style="margin:0 0 4px;font-size:18px">Nowe zgłoszenie z formularza</h2>
+    <p style="margin:0;color:#64748b;font-size:14px">${escapeHtml(formName)}</p>
+    ${contact ? `<p style="margin:6px 0 0;color:#334155;font-size:14px;font-weight:600">${contact}</p>` : ""}
+    ${summaryBlock}
+    <p style="margin:18px 0 10px;font-size:13px;font-weight:700;color:#0f172a">Pytania i odpowiedzi</p>
+    ${qaHtml}
+    <p style="margin-top:8px;font-size:12px;color:#94a3b8">📎 Pełna wersja w załączonym pliku PDF.</p>
   </div>`;
 }
 

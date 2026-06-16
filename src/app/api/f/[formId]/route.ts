@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabase } from "@/lib/supabase-server";
 import { verifyRecaptcha } from "@/lib/recaptcha";
-import { applyTemplate, renderDefaultNotification, sendEmail, escapeHtml } from "@/lib/email";
+import { applyTemplate, renderDefaultNotification, renderConversationNotification, sendEmail, escapeHtml } from "@/lib/email";
+import { buildConversationPdf } from "@/lib/pdf";
 import type { FormRecord, PlanType } from "@/lib/types";
+
+/** Wyłuskuje pary pytanie→odpowiedź ze zgłoszenia konwersacyjnego (klucze "1. ...", "2. ..."). */
+function extractQA(data: Record<string, unknown>): Array<{ q: string; a: string }> {
+  return Object.entries(data)
+    .filter(([k]) => /^\d+\.\s/.test(k))
+    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+    .map(([k, v]) => ({ q: k.replace(/^\d+\.\s/, ""), a: String(v ?? "") }));
+}
 
 /** Pomocniczo: wyciąga email nadawcy jeśli sender_email nie zostanie ustawiony triggerem. */
 function extractEmail(data: Record<string, unknown>): string | null {
@@ -134,22 +143,59 @@ export async function POST(req: Request, { params }: { params: { formId: string 
     : "";
 
   // Mail 1 → właściciel
+  const isConversational = form.config?.form_type === "conversational";
   if (ownerEmail) {
-    const tplBody = form.custom_email_template
-      ? applyTemplate(form.custom_email_template, body).replace(/\n/g, "<br/>")
-      : renderDefaultNotification(form.name, body);
     const signature = form.notification_signature
       ? `<p style="margin-top:24px;color:#64748b;font-size:13px">${escapeHtml(form.notification_signature).replace(/\n/g, "<br/>")}</p>`
       : "";
     const branding = plan === "free"
       ? `<hr style="margin:24px 0;border:none;border-top:1px solid #eee" /><p style="text-align:center;color:#94a3b8;font-size:12px">Powered by <a href="https://mulbox.ch" style="color:#7c3aed">Mulbox.ch</a></p>`
       : "";
-    await sendEmail({
-      to: ownerEmail,
-      replyTo: senderEmail ?? undefined,
-      subject: `Nowa wiadomość: ${form.name}`,
-      html: `<div>${tplBody}${attachmentsHtml}${signature}${branding}</div>`,
-    }).catch((e) => console.warn("[mail owner]", e));
+
+    if (isConversational) {
+      // Tryb konwersacyjny: czytelny mail Q&A + PDF w załączniku.
+      const qa = extractQA(body);
+      const summary = String(body["📋 Podsumowanie AI"] ?? "");
+      const name = String(body["Imię i nazwisko"] ?? "");
+      const tplBody = renderConversationNotification(form.name, {
+        name,
+        email: senderEmail ?? undefined,
+        qa,
+        summary,
+      });
+      const attachments = [];
+      try {
+        const pdf = await buildConversationPdf({
+          formName: form.name,
+          name,
+          email: senderEmail ?? undefined,
+          qa,
+          summary,
+          createdAt: new Date(),
+        });
+        const safeName = form.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 40) || "zgloszenie";
+        attachments.push({ filename: `${safeName}.pdf`, content: Buffer.from(pdf) });
+      } catch (e) {
+        console.warn("[pdf]", e);
+      }
+      await sendEmail({
+        to: ownerEmail,
+        replyTo: senderEmail ?? undefined,
+        subject: `Nowe zgłoszenie: ${form.name}`,
+        html: `<div>${tplBody}${signature}${branding}</div>`,
+        attachments,
+      }).catch((e) => console.warn("[mail owner]", e));
+    } else {
+      const tplBody = form.custom_email_template
+        ? applyTemplate(form.custom_email_template, body).replace(/\n/g, "<br/>")
+        : renderDefaultNotification(form.name, body);
+      await sendEmail({
+        to: ownerEmail,
+        replyTo: senderEmail ?? undefined,
+        subject: `Nowa wiadomość: ${form.name}`,
+        html: `<div>${tplBody}${attachmentsHtml}${signature}${branding}</div>`,
+      }).catch((e) => console.warn("[mail owner]", e));
+    }
   }
 
   // Mail 2 → autoresponder (Premium) do klienta
