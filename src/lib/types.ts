@@ -53,6 +53,8 @@ export interface FormConfig {
   conversation_intro?: string;
   /** Maksymalna liczba pytań w rozmowie (3–15). */
   conversation_max?: number;
+  /** Język rozmowy: "auto" (język przeglądarki/strony) lub kod (pl/de/en/fr/es/it). */
+  conversation_lang?: string;
 }
 
 export interface FormRecord {

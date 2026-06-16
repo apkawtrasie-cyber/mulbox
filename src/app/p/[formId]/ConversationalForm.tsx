@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 import { ArrowRight, Sparkles, CheckCircle2, RotateCcw } from "lucide-react";
+import { CONV_STRINGS, type ConvStrings } from "./conversationStrings";
 
 interface Props {
   formId: string;
@@ -10,6 +11,37 @@ interface Props {
   accentColor?: string;
   footer?: string;
   siteKey?: string;
+  /** Ustawienie języka rozmowy: "auto" lub kod (pl/de/en/fr/es/it). */
+  lang?: string;
+  /** Tryb demo (strona główna): bez bramki danych i bez zapisu zgłoszenia. */
+  demo?: boolean;
+  /** Tekst przycisku CTA pokazywanego po demie. */
+  demoCtaLabel?: string;
+  /** Akcja po kliknięciu CTA w demie. */
+  onDemoCta?: () => void;
+}
+
+const SUPPORTED_LANGS = ["pl", "de", "en", "fr", "es", "it"];
+
+/** Język znany już na serwerze (tylko z ustawienia formularza) – dla spójnej hydracji. */
+function initialLang(configured?: string): string {
+  const cfg = (configured ?? "").toLowerCase().slice(0, 2);
+  return cfg && cfg !== "au" && SUPPORTED_LANGS.includes(cfg) ? cfg : "pl";
+}
+
+/** Pełne ustalenie języka (klient): ?lang= w URL -> ustawienie formularza -> język przeglądarki -> pl. */
+function detectLang(configured?: string): string {
+  if (typeof window !== "undefined") {
+    const q = new URLSearchParams(window.location.search).get("lang")?.toLowerCase().slice(0, 2);
+    if (q && SUPPORTED_LANGS.includes(q)) return q;
+  }
+  const cfg = (configured ?? "").toLowerCase().slice(0, 2);
+  if (cfg && cfg !== "au" && SUPPORTED_LANGS.includes(cfg)) return cfg;
+  if (typeof navigator !== "undefined") {
+    const nav = navigator.language?.toLowerCase().slice(0, 2);
+    if (nav && SUPPORTED_LANGS.includes(nav)) return nav;
+  }
+  return "pl";
 }
 
 interface Turn { q: string; a: string }
@@ -18,11 +50,21 @@ type Phase = "gate" | "loading" | "question" | "summary" | "sent";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function ConversationalForm({ formId, intro, accentColor, footer, siteKey }: Props) {
+export default function ConversationalForm({ formId, intro, accentColor, footer, siteKey, lang, demo, demoCtaLabel, onDemoCta }: Props) {
   const accent = accentColor || "#7c3aed";
   const storageKey = `mulbox_conv_${formId}`;
-  // reCAPTCHA nie działa na localhost (klucz zarejestrowany dla domeny produkcyjnej),
-  // więc na localhoście pomijamy weryfikację, by dało się testować.
+
+  // Język interfejsu: start deterministyczny (SSR), pełne wykrycie po zamontowaniu.
+  const [uiLang, setUiLang] = useState<string>(() => initialLang(lang));
+  const langRef = useRef<string>(initialLang(lang));
+  useEffect(() => {
+    const resolved = detectLang(lang);
+    langRef.current = resolved;
+    setUiLang(resolved);
+  }, [lang]);
+  const tr: ConvStrings = CONV_STRINGS[uiLang] ?? CONV_STRINGS.pl;
+
+  // reCAPTCHA nie działa na localhost (klucz zarejestrowany dla domeny produkcyjnej).
   const [isLocal, setIsLocal] = useState(false);
   useEffect(() => {
     const h = window.location.hostname;
@@ -30,7 +72,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
   }, []);
   const hasCaptcha = !!siteKey && siteKey.length > 0 && !isLocal;
 
-  const [phase, setPhase] = useState<Phase>("gate");
+  const [phase, setPhase] = useState<Phase>(demo ? "loading" : "gate");
   const [lead, setLead] = useState<Lead>({ name: "", email: "" });
   const [captchaOk, setCaptchaOk] = useState(false);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
@@ -49,9 +91,17 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
   const [sending, setSending] = useState(false);
   const restored = useRef(false);
 
+  // Tryb demo: od razu startujemy rozmowę, bez bramki i bez localStorage.
+  useEffect(() => {
+    if (!demo || restored.current) return;
+    restored.current = true;
+    void converse([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Wznowienie przerwanej sesji (dane + historia)
   useEffect(() => {
-    if (restored.current) return;
+    if (demo || restored.current) return;
     restored.current = true;
     try {
       const raw = localStorage.getItem(storageKey);
@@ -69,13 +119,14 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
   }, []);
 
   function persist(h: Turn[], l: Lead) {
+    if (demo) return;
     try { localStorage.setItem(storageKey, JSON.stringify({ lead: l, history: h })); } catch { /* ignore */ }
   }
 
   function startConversation() {
-    if (!lead.name.trim()) { setError("Podaj imię i nazwisko."); return; }
-    if (!EMAIL_RE.test(lead.email.trim())) { setError("Podaj poprawny adres e-mail."); return; }
-    if (hasCaptcha && !captchaOk) { setError("Potwierdź, że nie jesteś robotem."); return; }
+    if (!lead.name.trim()) { setError(tr.errName); return; }
+    if (!EMAIL_RE.test(lead.email.trim())) { setError(tr.errEmail); return; }
+    if (hasCaptcha && !captchaOk) { setError(tr.errCaptcha); return; }
     setError(null);
     void converse([]);
   }
@@ -87,13 +138,13 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
       const res = await fetch("/api/ai/converse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ formId, history: nextHistory }),
+        body: JSON.stringify({ formId, history: nextHistory, lang: langRef.current, demo: !!demo }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         done?: boolean; question?: string; options?: string[]; multi?: boolean;
         summary?: string; error?: string;
       };
-      if (!res.ok) { setError(json.error ?? "Wystąpił błąd. Spróbuj ponownie."); setPhase("question"); return; }
+      if (!res.ok) { setError(json.error ?? tr.errGeneric); setPhase("question"); return; }
 
       if (json.done) {
         setSummary(json.summary ?? "");
@@ -110,7 +161,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
         requestAnimationFrame(() => setAnim(true));
       }
     } catch {
-      setError("Błąd połączenia. Sprawdź internet i spróbuj ponownie.");
+      setError(tr.errConnection);
       setPhase("question");
     }
   }
@@ -141,6 +192,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
   async function submitAll() {
     setSending(true);
     setError(null);
+    // Klucze danych zostają stałe (PL) – czyta je serwer (mail/PDF). Respondent ich nie widzi.
     const data: Record<string, string> = {
       "Imię i nazwisko": lead.name.trim(),
       "E-mail": lead.email.trim(),
@@ -157,7 +209,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
       try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
       setPhase("sent");
     } catch {
-      setError("Nie udało się wysłać. Spróbuj ponownie.");
+      setError(tr.errSend);
     } finally {
       setSending(false);
     }
@@ -174,31 +226,30 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
   }
 
   const answered = history.length;
+  const firstName = lead.name.split(" ")[0];
 
   return (
     <div className="mt-8 rounded-2xl bg-white shadow-xl border border-slate-100 p-6 overflow-hidden">
       {/* FAZA: brama – dane + weryfikacja */}
       {phase === "gate" && (
         <div className="space-y-4">
-          <p className="text-sm text-slate-500">
-            {intro || "Zanim zaczniemy, zostaw swoje dane — odezwiemy się z odpowiedzią."}
-          </p>
+          <p className="text-sm text-slate-500">{intro || tr.introDefault}</p>
           <div>
-            <label className="label">Imię i nazwisko</label>
+            <label className="label">{tr.nameLabel}</label>
             <input
               value={lead.name}
               onChange={(e) => setLead((l) => ({ ...l, name: e.target.value }))}
-              placeholder="Jan Kowalski"
+              placeholder={tr.namePlaceholder}
               className="input"
             />
           </div>
           <div>
-            <label className="label">Adres e-mail</label>
+            <label className="label">{tr.emailLabel}</label>
             <input
               type="email"
               value={lead.email}
               onChange={(e) => setLead((l) => ({ ...l, email: e.target.value }))}
-              placeholder="jan@przyklad.pl"
+              placeholder={tr.emailPlaceholder}
               className="input"
             />
           </div>
@@ -213,7 +264,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
             </div>
           )}
           {isLocal && !!siteKey && (
-            <p className="text-xs text-amber-600 text-center">Tryb localhost: weryfikacja reCAPTCHA pominięta (zadziała na produkcji).</p>
+            <p className="text-xs text-amber-600 text-center">{tr.localhostCaptcha}</p>
           )}
           {error && (
             <p role="alert" className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 text-center">{error}</p>
@@ -223,7 +274,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
             className="btn-primary w-full"
             style={{ backgroundColor: accent, borderColor: accent }}
           >
-            Rozpocznij <ArrowRight size={16} />
+            {tr.start} <ArrowRight size={16} />
           </button>
         </div>
       )}
@@ -232,11 +283,11 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
       {(phase === "loading" || phase === "question" || phase === "summary") && (
         <div className="flex items-center justify-between mb-5">
           <p className="text-xs font-medium text-slate-400">
-            {phase === "summary" ? "Gotowe" : `Pytanie ${answered + 1}`}
+            {phase === "summary" ? tr.done : tr.question(answered + 1)}
           </p>
           {resumed && phase !== "summary" && (
             <button onClick={restart} className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600">
-              <RotateCcw size={12} /> Zacznij od nowa
+              <RotateCcw size={12} /> {tr.restart}
             </button>
           )}
         </div>
@@ -244,14 +295,14 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
 
       {resumed && answered > 0 && phase === "question" && (
         <p className="mb-4 rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-700">
-          Witaj ponownie, {lead.name.split(" ")[0]}! Wróciliśmy do miejsca, w którym skończyłeś.
+          {tr.welcomeBack(firstName)}
         </p>
       )}
 
       {/* FAZA: ładowanie */}
       {phase === "loading" && (
         <div className="flex items-center gap-2 text-slate-400 text-sm py-10 justify-center">
-          <Sparkles size={16} className="animate-pulse" /> AI przygotowuje pytanie…
+          <Sparkles size={16} className="animate-pulse" /> {tr.preparing}
         </div>
       )}
 
@@ -265,7 +316,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
           <div className="mt-4">
             {options.length > 0 ? (
               <div className="space-y-2">
-                {multi && <p className="text-xs text-slate-400 mb-1">Możesz wybrać kilka odpowiedzi.</p>}
+                {multi && <p className="text-xs text-slate-400 mb-1">{tr.multiHint}</p>}
                 {options.map((opt) => {
                   const active = picked.includes(opt);
                   return (
@@ -285,7 +336,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
                 <textarea
                   value={otherText}
                   onChange={(e) => setOtherText(e.target.value)}
-                  placeholder="Coś nie pasuje albo chcesz dodać coś od siebie? Napisz tutaj…"
+                  placeholder={tr.otherPlaceholder}
                   rows={2}
                   className="input resize-none text-sm mt-2"
                 />
@@ -295,7 +346,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void next(); } }}
-                placeholder="Wpisz odpowiedź…"
+                placeholder={tr.answerPlaceholder}
                 rows={3}
                 autoFocus
                 className="input resize-none w-full"
@@ -311,7 +362,7 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
             className="btn-primary w-full mt-5 disabled:opacity-50"
             style={{ backgroundColor: accent, borderColor: accent }}
           >
-            Dalej <ArrowRight size={16} />
+            {tr.next} <ArrowRight size={16} />
           </button>
         </div>
       )}
@@ -319,24 +370,34 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
       {/* FAZA: podsumowanie dla klienta (Q&A) + streszczenie + wysyłka */}
       {phase === "summary" && (
         <div>
-          <QARecap history={history} />
+          <QARecap history={history} title={tr.yourAnswers} />
           <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-4">
             <p className="flex items-center gap-2 text-sm font-semibold text-violet-800 mb-2">
-              <Sparkles size={16} /> Streszczenie
+              <Sparkles size={16} /> {tr.summary}
             </p>
             <p className="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{summary}</p>
           </div>
           {error && (
             <p role="alert" className="mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 text-center">{error}</p>
           )}
-          <button
-            onClick={() => void submitAll()}
-            disabled={sending}
-            className="btn-primary w-full mt-5 disabled:opacity-50"
-            style={{ backgroundColor: accent, borderColor: accent }}
-          >
-            {sending ? "Wysyłanie…" : "Zapisz i wyślij"}
-          </button>
+          {demo ? (
+            <button
+              onClick={() => onDemoCta?.()}
+              className="btn-primary w-full mt-5"
+              style={{ backgroundColor: accent, borderColor: accent }}
+            >
+              {demoCtaLabel || "Załóż darmowe konto"} <ArrowRight size={16} />
+            </button>
+          ) : (
+            <button
+              onClick={() => void submitAll()}
+              disabled={sending}
+              className="btn-primary w-full mt-5 disabled:opacity-50"
+              style={{ backgroundColor: accent, borderColor: accent }}
+            >
+              {sending ? tr.sending : tr.send}
+            </button>
+          )}
         </div>
       )}
 
@@ -344,8 +405,8 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
       {phase === "sent" && (
         <div className="text-center py-8">
           <CheckCircle2 size={40} className="mx-auto mb-3" style={{ color: accent }} />
-          <h2 className="text-xl font-bold text-slate-900">Dziękujemy, {lead.name.split(" ")[0]}!</h2>
-          <p className="mt-2 text-sm text-slate-500">Twoje odpowiedzi zostały wysłane.</p>
+          <h2 className="text-xl font-bold text-slate-900">{tr.thanks(firstName)}</h2>
+          <p className="mt-2 text-sm text-slate-500">{tr.sentInfo}</p>
         </div>
       )}
 
@@ -358,11 +419,11 @@ export default function ConversationalForm({ formId, intro, accentColor, footer,
   );
 }
 
-function QARecap({ history }: { history: Turn[] }) {
+function QARecap({ history, title }: { history: Turn[]; title: string }) {
   if (history.length === 0) return null;
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-sm font-semibold text-slate-800 mb-3">Twoje odpowiedzi</p>
+      <p className="text-sm font-semibold text-slate-800 mb-3">{title}</p>
       <ul className="space-y-3">
         {history.map((t, i) => (
           <li key={i}>

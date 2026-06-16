@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { Hero } from "@/components/marketing/Hero";
 import { Trust } from "@/components/marketing/Trust";
 import { Features } from "@/components/marketing/Features";
+import { LiveDemo } from "@/components/marketing/LiveDemo";
 import { CodeShowcase } from "@/components/marketing/CodeShowcase";
 import { Link } from "@/i18n/routing";
 
@@ -32,6 +33,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <Hero />
       <Trust />
       <Features />
+      <LiveDemo />
       <CodeShowcase />
       <FaqSection />
       <CtaSection />

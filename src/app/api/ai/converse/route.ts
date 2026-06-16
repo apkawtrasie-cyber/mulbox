@@ -15,31 +15,69 @@ import type { FormRecord } from "@/lib/types";
 
 interface Turn { q: string; a: string }
 
+/** Mapa kodu języka -> nazwa języka, którą rozumie model. */
+const LANG_NAMES: Record<string, string> = {
+  pl: "polskim (polish)",
+  de: "niemieckim (german)",
+  en: "angielskim (english)",
+  fr: "francuskim (french)",
+  es: "hiszpańskim (spanish)",
+  it: "włoskim (italian)",
+};
+
+function resolveLang(raw?: string): string {
+  const code = (raw ?? "").toLowerCase().slice(0, 2);
+  return LANG_NAMES[code] ? code : "pl";
+}
+
+// Stały cel rozmowy dla dema na stronie głównej (nie z bazy, nie do nadużyć).
+const DEMO_GOAL =
+  "To jest demonstracja formularza kontaktowego Mulbox na stronie głównej. " +
+  "Zachowuj się jak uprzejmy formularz kontaktowy: krótko dowiedz się, jakim biznesem/projektem zajmuje się osoba, " +
+  "do czego chciałaby użyć formularza Mulbox (np. kontakt, brief, wycena, ankieta), co jest dla niej najważniejsze, " +
+  "oraz jak się z nią skontaktować. Zadaj maksymalnie kilka pytań i zakończ pozytywnym streszczeniem.";
+
 export async function POST(req: Request) {
-  const { formId, history: rawHistory } = (await req.json().catch(() => ({}))) as {
+  const { formId, history: rawHistory, lang: rawLang, demo } = (await req.json().catch(() => ({}))) as {
     formId?: string;
     history?: Turn[];
+    lang?: string;
+    demo?: boolean;
   };
 
-  if (!formId) return NextResponse.json({ error: "Brak formId." }, { status: 400 });
+  if (!demo && !formId) return NextResponse.json({ error: "Brak formId." }, { status: 400 });
 
   const history: Turn[] = Array.isArray(rawHistory)
     ? rawHistory.filter((t) => t && typeof t.q === "string" && typeof t.a === "string").slice(0, 30)
     : [];
 
-  const supabase = createServiceSupabase();
-  const { data: form } = await supabase
-    .from("forms")
-    .select("name, is_active, config")
-    .eq("id", formId)
-    .maybeSingle<Pick<FormRecord, "name" | "is_active" | "config">>();
+  let goal: string;
+  let maxQ: number;
+  let langCode: string;
 
-  if (!form || !form.is_active) {
-    return NextResponse.json({ error: "Formularz niedostępny." }, { status: 404 });
+  if (demo) {
+    // Tryb demo: stały cel, krótka rozmowa, bez dostępu do bazy.
+    goal = DEMO_GOAL;
+    maxQ = 5;
+    langCode = resolveLang(rawLang);
+  } else {
+    const supabase = createServiceSupabase();
+    const { data: form } = await supabase
+      .from("forms")
+      .select("name, is_active, config")
+      .eq("id", formId)
+      .maybeSingle<Pick<FormRecord, "name" | "is_active" | "config">>();
+
+    if (!form || !form.is_active) {
+      return NextResponse.json({ error: "Formularz niedostępny." }, { status: 404 });
+    }
+    goal = form.config?.conversation_goal?.trim() || form.name;
+    maxQ = Math.min(Math.max(Number(form.config?.conversation_max ?? 8), 3), 15);
+    // Priorytet języka: jawnie podany z klienta -> ustawienie formularza -> polski.
+    langCode = resolveLang(rawLang || form.config?.conversation_lang);
   }
 
-  const goal = form.config?.conversation_goal?.trim() || form.name;
-  const maxQ = Math.min(Math.max(Number(form.config?.conversation_max ?? 8), 3), 15);
+  const langName = LANG_NAMES[langCode];
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "Brak konfiguracji klucza AI." }, { status: 500 });
@@ -52,8 +90,16 @@ export async function POST(req: Request) {
     : "(rozmowa jeszcze się nie zaczęła)";
 
   const prompt = `Jesteś asystentem prowadzącym ankietę/wywiad w imieniu właściciela formularza.
+
+JĘZYK ROZMOWY – ZASADA NADRZĘDNA (ważniejsza niż wszystko inne):
+- CAŁĄ rozmowę prowadź WYŁĄCZNIE w języku ${langName}. To jest narzucony, stały język formularza.
+- Wszystkie pytania, wszystkie opcje wyboru ORAZ końcowe streszczenie MUSZĄ być w języku ${langName}.
+- IGNORUJ język, w którym napisany jest cel formularza poniżej – i tak pytaj w języku ${langName}.
+- IGNORUJ język, w którym odpowiada osoba wypełniająca. Nawet jeśli odpowie po polsku, angielsku czy w jakimkolwiek innym języku, TY dalej zadawaj kolejne pytania i streszczenie w języku ${langName}. NIE przełączaj się na język użytkownika.
+- Nie mieszaj języków, nie tłumacz na dwa języki – tylko ${langName}.
+
 Twoim celem jest zebrać od osoby wypełniającej informacje opisane poniżej, zadając pytania POJEDYNCZO,
-naturalnym, uprzejmym językiem polskim. Dopytuj o szczegóły, jeśli to potrzebne. Nie zadawaj kilku pytań naraz.
+naturalnym, uprzejmym tonem. Dopytuj o szczegóły, jeśli to potrzebne. Nie zadawaj kilku pytań naraz.
 
 BARDZO WAŻNE – ZAKAZ POWTÓRZEŃ:
 - Najpierw przeczytaj całą dotychczasową rozmowę.
@@ -71,8 +117,8 @@ Limit pytań: ${maxQ}. Zadano dotąd: ${history.length}.
 ${forceDone ? "Osiągnięto limit pytań – MUSISZ teraz zakończyć rozmowę (done=true)." : ""}
 
 Zwróć WYŁĄCZNIE obiekt JSON (bez markdown, bez komentarzy) w jednym z dwóch formatów:
-- aby zadać kolejne pytanie:   {"done": false, "question": "treść pytania po polsku", "options": ["opcja A","opcja B"], "multi": false}
-- aby zakończyć rozmowę:        {"done": true, "summary": "zwięzłe streszczenie wszystkich odpowiedzi w punktach, po polsku, gotowe do przeczytania przez właściciela formularza"}
+- aby zadać kolejne pytanie:   {"done": false, "question": "treść pytania w języku ${langName}", "options": ["opcja A","opcja B"], "multi": false}
+- aby zakończyć rozmowę:        {"done": true, "summary": "zwięzłe streszczenie wszystkich odpowiedzi w punktach, w języku ${langName}, gotowe do przeczytania przez właściciela formularza"}
 
 Zasada dla "options" – BARDZO WAŻNE (preferuj gotowe opcje!):
 - DOMYŚLNIE proponuj klikalne opcje. Zakładaj, że osoba wypełniająca jest laikiem i NIE zna fachowych pojęć – nie każ jej pisać z głowy, tylko podaj konkretne możliwości do zaznaczenia.

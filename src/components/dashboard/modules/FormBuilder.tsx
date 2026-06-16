@@ -26,6 +26,7 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
   const [convGoal, setConvGoal] = useState(selectedForm?.config?.conversation_goal ?? "");
   const [convIntro, setConvIntro] = useState(selectedForm?.config?.conversation_intro ?? "");
   const [convMax, setConvMax] = useState(selectedForm?.config?.conversation_max ?? 8);
+  const [convLang, setConvLang] = useState(selectedForm?.config?.conversation_lang ?? "auto");
   const [copied, setCopied] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -39,6 +40,7 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
     setConvGoal(selectedForm?.config?.conversation_goal ?? "");
     setConvIntro(selectedForm?.config?.conversation_intro ?? "");
     setConvMax(selectedForm?.config?.conversation_max ?? 8);
+    setConvLang(selectedForm?.config?.conversation_lang ?? "auto");
   }, [selectedForm?.id]);
 
   const html = useMemo(() => {
@@ -75,6 +77,7 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
             conversation_goal: convGoal,
             conversation_intro: convIntro,
             conversation_max: convMax,
+            conversation_lang: convLang,
           },
         }),
       });
@@ -255,6 +258,19 @@ export function FormBuilder({ forms, selectedForm, onSelectForm, plan }: Props) 
                 placeholder="Cześć! Zadam Ci kilka pytań, żeby przygotować wycenę."
                 className="input text-sm"
               />
+            </div>
+            <div>
+              <label className="label">Język rozmowy</label>
+              <select value={convLang} onChange={(e) => setConvLang(e.target.value)} className="input text-sm">
+                <option value="auto">Automatyczny (język przeglądarki / strony)</option>
+                <option value="pl">Polski</option>
+                <option value="de">Niemiecki (Deutsch)</option>
+                <option value="en">Angielski (English)</option>
+                <option value="fr">Francuski (Français)</option>
+                <option value="es">Hiszpański (Español)</option>
+                <option value="it">Włoski (Italiano)</option>
+              </select>
+              <p className="text-xs text-slate-400 mt-1">AI zada pytania i streszczenie w tym języku. „Automatyczny" = język przeglądarki użytkownika; możesz też wymusić język w linku, np. <code>?lang=de</code>.</p>
             </div>
             <div>
               <label className="label">Maks. liczba pytań: {convMax}</label>
