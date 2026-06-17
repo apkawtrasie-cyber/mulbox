@@ -1,9 +1,9 @@
 "use client";
 
 import { useLocale } from "next-intl";
-import { useState, useTransition, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Globe, ChevronDown, Check } from "lucide-react";
-import { usePathname, useRouter, routing, type Locale } from "@/i18n/routing";
+import { usePathname, routing, type Locale } from "@/i18n/routing";
 
 const LABELS: Record<Locale, string> = {
   de: "DE",
@@ -26,9 +26,8 @@ const FULL_LABELS: Record<Locale, string> = {
 /** Language switcher – visible pill button with dropdown. */
 export function LanguageSwitcher() {
   const locale = useLocale() as Locale;
-  const router = useRouter();
   const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -44,9 +43,19 @@ export function LanguageSwitcher() {
 
   function switchTo(next: Locale) {
     setOpen(false);
-    startTransition(() => {
-      router.replace(pathname, { locale: next });
-    });
+    if (next === locale) return;
+    setIsPending(true);
+
+    // 1) Ustaw ciasteczko języka jawnie (rok ważności), żeby serwer go respektował.
+    document.cookie = `NEXT_LOCALE=${next};path=/;max-age=31536000;samesite=lax`;
+
+    // 2) Policz docelowy adres ręcznie. Dla domyślnego języka (de) brak prefiksu,
+    //    dla pozostałych /<lang><ścieżka>. pathname z next-intl jest bez prefiksu.
+    const path = pathname === "/" ? "" : pathname;
+    const target = next === routing.defaultLocale ? path || "/" : `/${next}${path}`;
+
+    // 3) Pełne przeładowanie – pomija miękką nawigację i ewentualny cache redirectów.
+    window.location.assign(target);
   }
 
   return (
