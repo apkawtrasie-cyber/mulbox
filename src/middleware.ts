@@ -20,12 +20,16 @@ function isInternalRoute(pathname: string) {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Najpierw routing wielojęzykowy dla tras publicznych
-  let response = isInternalRoute(pathname)
+  // Najpierw routing wielojęzykowy dla tras publicznych.
+  // WAŻNE: tej odpowiedzi (z przekierowaniem / rewrite na właściwy język) NIE wolno
+  // później nadpisać — inaczej gubimy locale i dostajemy 404 (raz działa, raz nie).
+  const response = isInternalRoute(pathname)
     ? NextResponse.next({ request: { headers: request.headers } })
     : intlMiddleware(request);
 
-  // Następnie odświeżenie sesji Supabase (wymagane przed każdym Server Component)
+  // Następnie odświeżenie sesji Supabase (wymagane przed każdym Server Component).
+  // Odświeżone ciasteczka DOKLEJAMY do istniejącej odpowiedzi next-intl,
+  // zamiast tworzyć nową (co kasowało redirect/rewrite języka).
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -33,10 +37,7 @@ export async function middleware(request: NextRequest) {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) => {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
           );
